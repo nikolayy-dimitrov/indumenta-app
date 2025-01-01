@@ -1,5 +1,10 @@
 {
   "expo": {
+    "splash": {
+      "image": "./assets/logo-grayscale.png",
+      "resizeMode": "contain"
+    },
+    "newArchEnabled": true,
     "scheme": "acme",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
@@ -15,7 +20,13 @@
         }
       ]
     ],
-    "name": "indumenta-app",
-    "slug": "indumenta-app"
+    "name": "INDUMENTA",
+    "slug": "indumenta-app",
+    "ios": {
+      "bundleIdentifier": "com.anonymous.indumenta-app"
+    },
+    "android": {
+      "package": "com.anonymous.indumentaapp"
+    }
   }
 }

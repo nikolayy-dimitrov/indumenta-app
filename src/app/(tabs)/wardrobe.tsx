@@ -6,6 +6,7 @@ import { db } from "@/../firebaseConfig.ts";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useActionSheet } from "@expo/react-native-action-sheet";
 
 interface ClothingItem {
     id: string;
@@ -14,15 +15,18 @@ interface ClothingItem {
     uploadedAt: Timestamp;
     userId: string;
     category: string;
+    subCategory: string;
 }
 
 type SortOption = "newest" | "oldest" | "color";
 
 const Wardrobe = () => {
-    const { user } = useContext(AuthContext);
+    const { user, isLoading, setIsLoading } = useContext(AuthContext);
     const [clothes, setClothes] = useState<ClothingItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
+
+    const { showActionSheetWithOptions } = useActionSheet();
+
 
     useEffect(() => {
         if (!user) {
@@ -43,7 +47,8 @@ const Wardrobe = () => {
                     dominantColor: data.dominantColor,
                     uploadedAt: data.uploadedAt,
                     userId: data.userId,
-                    category: data.category
+                    category: data.category,
+                    subCategory: data.subCategory
                 };
             });
 
@@ -99,6 +104,30 @@ const Wardrobe = () => {
         }
     };
 
+    const handleSortOptions = () => {
+        const options = ["Newest First", "Oldest First", "Color", "Cancel"];
+        const cancelButtonIndex = options.length - 1;
+
+        showActionSheetWithOptions(
+            {
+                options,
+                cancelButtonIndex,
+                destructiveButtonIndex: cancelButtonIndex,
+            },
+            (buttonIndex) => {
+                if (buttonIndex === 0) {
+                    setSortBy("newest");
+                } else if (buttonIndex === 1) {
+                    setSortBy("oldest");
+                } else if (buttonIndex === 2) {
+                    setSortBy("color");
+                }
+            }
+        );
+    };
+
+    const sortedClothes = sortClothes(clothes);
+
     if (!user) {
         return (
             <View className="flex-1 justify-center items-center h-full font-Josefin">
@@ -115,42 +144,41 @@ const Wardrobe = () => {
         );
     }
 
-    const sortedClothes = sortClothes(clothes);
 
     return (
-        <SafeAreaView className="flex-1 px-4 pt-12 bg-primary dark:bg-secondary h-screen font-Josefin">
-            <Text className="text-2xl font-bold mb-4 text-secondary dark:text-primary">Your Wardrobe</Text>
-
+        <SafeAreaView className="px-6 bg-primary dark:bg-secondary font-Josefin h-screen">
+            <Text className="uppercase text-2xl font-bold mb-4 text-secondary dark:text-primary">
+                Wardrobe
+            </Text>
+            <TouchableOpacity onPress={handleSortOptions} className="bg-secondary/90 dark:bg-primary/85 rounded-md p-2 my-2">
+                <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">{sortBy}</Text>
+            </TouchableOpacity>
             <FlatList
                 data={sortedClothes}
                 keyExtractor={(item) => item.id}
+                numColumns={2}
+                columnWrapperStyle={{ justifyContent: 'space-between' }}
                 renderItem={({ item }) => (
-                    <View
-                        className="mb-4 flex flex-row items-center border border-primary rounded-xl p-4 dark:bg-primary/80 bg-secondary/10"
-                    >
+                    <View className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
                         <Image
                             source={{ uri: item.imageUrl }}
-                            className="w-24 h-24 rounded-xl"
+                            className="w-44 h-44 rounded-t-xl"
                         />
-                        <View className="ml-4 flex-1">
-                            <Text className="font-medium text-base">{item.category}</Text>
-                            <Text className="text-sm text-gray-600">
-                                Uploaded: {new Date(item.uploadedAt.toMillis()).toLocaleDateString()}
+                        <View className="px-3 gap-2 flex-row items-center">
+                            <Text className="lowercase font-medium text-base text-secondary/90 dark:text-primary/90">
+                                {item.category}
                             </Text>
-                            <View className="flex flex-row items-center">
-                                <Text className="text-sm text-gray-600">Color: </Text>
-                                <View
-                                    style={{ backgroundColor: item.dominantColor }}
-                                    className="w-4 h-4 ml-2 rounded"
-                                ></View>
-                            </View>
+                            <View
+                                style={{ backgroundColor: item.dominantColor }}
+                                className="w-4 h-4 rounded"
+                            ></View>
                         </View>
-                        <TouchableOpacity
-                            onPress={() => confirmDelete(item.id)}
-                            className="p-2"
-                        >
-                            <Text className="text-secondary font-semibold">Remove</Text>
-                        </TouchableOpacity>
+                        {/*<TouchableOpacity*/}
+                        {/*    onPress={() => confirmDelete(item.id)}*/}
+                        {/*    className="p-2"*/}
+                        {/*>*/}
+                        {/*    <Text className="text-secondary font-semibold">Remove</Text>*/}
+                        {/*</TouchableOpacity>*/}
                     </View>
                 )}
                 ListEmptyComponent={

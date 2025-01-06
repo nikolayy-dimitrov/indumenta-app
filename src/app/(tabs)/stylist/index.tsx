@@ -73,6 +73,7 @@ const StylistPage: React.FC = () => {
                 imageUrl: doc.data().imageUrl,
                 dominantColor: doc.data().dominantColor,
                 category: doc.data().category || "Unknown",
+                subCategory: doc.data().category || "Unknown",
                 vibe: doc.data().vibe || "Unknown",
                 season: doc.data().season || "Unknown",
             });

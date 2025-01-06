@@ -1,7 +1,7 @@
-import {View, Text, Image, FlatList, Alert, TouchableOpacity} from "react-native";
+import { View, Text, Image, FlatList, Alert, TouchableOpacity } from "react-native";
 import { useContext, useEffect, useState } from "react";
 
-import {collection, query, where, getDocs, Timestamp, deleteDoc, doc} from "firebase/firestore";
+import { collection, query, where, Timestamp, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
@@ -25,42 +25,37 @@ const Wardrobe = () => {
     const [sortBy, setSortBy] = useState<SortOption>("newest");
 
     useEffect(() => {
-        const fetchClothes = async () => {
-            if (!user) {
-                setIsLoading(false);
-                return;
-            }
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
 
-            try {
-                const clothesRef = collection(db, "clothes");
-                const q = query(
-                    clothesRef,
-                    where("userId", "==", user.uid)
-                );
+        const clothesRef = collection(db, "clothes");
+        const q = query(clothesRef, where("userId", "==", user.uid));
 
-                const querySnapshot = await getDocs(q);
+        // Real-time listener
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const clothesData = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    imageUrl: data.imageUrl,
+                    dominantColor: data.dominantColor,
+                    uploadedAt: data.uploadedAt,
+                    userId: data.userId,
+                    category: data.category
+                };
+            });
 
-                const clothesData = querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        imageUrl: data.imageUrl,
-                        dominantColor: data.dominantColor,
-                        uploadedAt: data.uploadedAt,
-                        userId: data.userId,
-                        category: data.category
-                    };
-                });
+            setClothes(clothesData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching clothes:", error);
+            setIsLoading(false);
+        });
 
-                setClothes(clothesData);
-            } catch (error) {
-                console.error("Error fetching clothes:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchClothes();
+        // Clean up the listener on unmount
+        return () => unsubscribe();
     }, [user]);
 
     const deleteItem = async (itemId: string) => {
@@ -131,11 +126,11 @@ const Wardrobe = () => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View
-                        className="mb-4 flex flex-row items-center border border-primary rounded-lg p-4 dark:bg-primary/80 bg-secondary/10"
+                        className="mb-4 flex flex-row items-center border border-primary rounded-xl p-4 dark:bg-primary/80 bg-secondary/10"
                     >
                         <Image
                             source={{ uri: item.imageUrl }}
-                            className="w-24 h-24"
+                            className="w-24 h-24 rounded-xl"
                         />
                         <View className="ml-4 flex-1">
                             <Text className="font-medium text-base">{item.category}</Text>

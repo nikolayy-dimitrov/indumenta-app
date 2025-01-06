@@ -121,13 +121,16 @@ const StylistPage: React.FC = () => {
             case 'styleSelection':
                 return (
                     <StyleSelection
+                        stylePreferences={stylePreferences}
+                        onStyleChange={handleStylePreferenceChange}
                         onBack={() => navigateTo('upload')}
-                        onNext={() => navigateTo('outfitDisplay')}
+                        onNext={generateOutfit}
                     />
                 );
             case 'outfitDisplay':
                 return (
                     <OutfitDisplay
+                        outfit={outfit}
                         onBack={() => navigateTo('styleSelection')}
                     />
                 );

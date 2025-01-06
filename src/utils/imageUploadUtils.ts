@@ -24,16 +24,19 @@ export const handleUpload = async (
             const storageRef = ref(storage, `clothes/${user.uid}/${file.name}`);
             await uploadBytes(storageRef, file);
             const imageUrl = await getDownloadURL(storageRef);
+            const modelName = 'dragoneye/fashion';
+            const altModelName = 'dragoneye/footwear';
 
-            const predictionData = await fetchPredictionData(apiUrl, imageUrl, "dragoneye/fashion");
+            const predictionData = await fetchPredictionData(apiUrl, imageUrl, modelName, altModelName);
             console.log("predictionData", predictionData);
-            const { category, vibe, season, color  } = predictionData[0];
+            const { category, vibe, season, color, subCategory  } = predictionData[0];
 
             await addDoc(collection(db, "clothes"), {
                 userId: user.uid,
                 imageUrl,
                 dominantColor: dominantColors[i],
                 category,
+                subCategory,
                 vibe,
                 season,
                 color,
@@ -43,7 +46,7 @@ export const handleUpload = async (
 
         onUploadSuccess();
     } catch (error) {
-        console.error("Error uploading images:", error);
+        console.error("Error uploading image:", error);
 
         onError(error as Error);
     }

@@ -199,6 +199,14 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <View className="flex justify-center items-center h-screen font-Josefin">
+                <Text className="text-primary">Loading...</Text>
+            </View>
+        )
+    }
+
     return (
         <SafeAreaView className="flex-1 justify-center items-center p-4">
             {/* Image Selection Options */}
@@ -241,7 +249,7 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
                     containerStyles="py-2 px-12 top-12 absolute"
                 />
                 ) : (
-                    <View className="py-8 bottom-0 absolute">
+                    <View className="py-8 top-8 absolute">
                         <Text className="text-center text-secondary dark:text-primary">Please upload at least 3 pieces of clothing to proceed.</Text>
                     </View>
             )}

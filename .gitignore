@@ -4,10 +4,17 @@
 node_modules/
 
 # Expo
+.expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+
+.idea
+android
+ios
+/ios
+ios/INDUMENTA
 
 # Native
 *.orig.*
@@ -37,8 +44,3 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-
-# Expo
-.expo
-dist/
-web-build/

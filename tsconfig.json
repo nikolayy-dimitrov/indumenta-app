@@ -3,12 +3,20 @@
     "allowImportingTsExtensions": true,
     "moduleResolution": "Node",
     "strict": true,
-    "typeRoots": ["./src/types/env.d.ts"],
+    "typeRoots": [
+      "./src/types/env.d.ts"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"],
+      "@firebase/auth": [
+        "./node_modules/@firebase/auth/dist/index.rn.d.ts"
+      ],
       "@/*": [
-        "./src/*"
+        "./src/*",
+        "./*"
+      ],
+      "tailwind.config": [
+        "./tailwind.config.js"
       ]
     }
   },

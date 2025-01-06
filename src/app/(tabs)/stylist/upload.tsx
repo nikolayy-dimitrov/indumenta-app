@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Alert, Image, Platform, View, Text } from 'react-native';
+import { Alert, Image, Platform, View, Text, TouchableOpacity, useColorScheme } from 'react-native';
 import { AuthContext } from "@/context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "@/components/CustomButton";
@@ -10,8 +10,9 @@ import { extractDominantColor } from "@/utils/colorUtils.ts";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
-import { faImage } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faImage, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
 interface UploadProps {
     onNext: () => void;
@@ -23,6 +24,11 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
     const [clothesCount, setClothesCount] = useState<number>(0);
 
     const { user, isLoading, setIsLoading } = useContext(AuthContext);
+
+    const colorScheme = useColorScheme();
+    const dynamicIconStyle = {
+        color: colorScheme === "dark" ? "#F8E9D5" : "#181819",
+    };
 
     useEffect(() => {
         const fetchDominantColor = async () => {
@@ -209,45 +215,65 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
 
     return (
         <SafeAreaView className="flex-1 justify-center items-center p-4">
-            {/* Image Selection Options */}
-            <View className="flex flex-row items-center justify-center gap-4">
-                <CustomButton
-                    icon={faImage}
-                    handlePress={pickImage}
-                    containerStyles="py-6 px-6"
-                />
-
-                <CustomButton
-                    icon={faCamera}
-                    handlePress={takePhoto}
-                    containerStyles="py-6 px-6"
-                />
-            </View>
 
             {/* Display Selected Image */}
-            {imageUri && (
-                <View className="my-4 overflow-hidden rounded-2xl w-60 h-60">
+            {imageUri ? (
+                <View className="my-4 overflow-hidden rounded-2xl h-96 w-11/12">
                     <Image
                         source={{ uri: imageUri }}
                         className="w-full h-full"
                         resizeMode="cover"
                     />
                 </View>
+            ) : (
+                <View className="my-4 overflow-hidden bg-secondary/5 dark:bg-primary/5 rounded h-96 w-11/12 items-center justify-center flex">
+                    <FontAwesomeIcon icon={faImage} style={dynamicIconStyle} size={20} />
+                </View>
             )}
 
-            <CustomButton
-                title="Upload Image"
-                handlePress={handleUploadImage}
+            {/* Image Selection Options */}
+            <View className="flex items-center justify-center gap-2 w-11/12 my-4">
+                <CustomButton
+                    icon={faImage}
+                    handlePress={pickImage}
+                    containerStyles="w-full"
+                    textStyles="mx-2"
+                    title="Gallery"
+                />
+
+                <CustomButton
+                    icon={faCamera}
+                    handlePress={takePhoto}
+                    containerStyles="w-full"
+                    textStyles="mx-2"
+                    title="Take Photo"
+                />
+            </View>
+
+            <TouchableOpacity
+                onPress={() => handleUploadImage}
+                className="flex-row items-center justify-center gap-2 bg-primary dark:bg-secondary w-full py-4 my-2
+                 border border-secondary/60 dark:border-primary/50 rounded-lg disabled:opacity-60"
                 disabled={!imageUri || isLoading}
-                containerStyles="py-2 px-12 bottom-12 absolute"
-            />
+            >
+                <FontAwesomeIcon
+                    icon={faUpload}
+                    style={dynamicIconStyle}
+                />
+                <Text className="font-medium text-secondary dark:text-primary">
+                    Upload
+                </Text>
+            </TouchableOpacity>
 
             {clothesCount >= 3 ? (
-                <CustomButton
-                    title="Select Style"
-                    handlePress={handleNext}
-                    containerStyles="py-2 px-12 top-12 absolute"
-                />
+                <TouchableOpacity
+                    onPress={() => handleNext()}
+                    className="flex-row items-center justify-center gap-2 bg-content/80 w-full py-4 border border-secondary/40 rounded-lg absolute bottom-0">
+                    <Text className="font-medium">
+                        Select Style
+                    </Text>
+                    <FontAwesomeIcon icon={faArrowRight} />
+                </TouchableOpacity>
                 ) : (
                     <View className="py-8 top-8 absolute">
                         <Text className="text-center text-secondary dark:text-primary">Please upload at least 3 pieces of clothing to proceed.</Text>

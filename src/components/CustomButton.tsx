@@ -42,7 +42,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
                     <FontAwesomeIcon
                         icon={icon}
                         style={dynamicIconStyle}
-                        size={24}
+                        size={16}
                     />
             )}
             {title && (

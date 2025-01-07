@@ -42,13 +42,39 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
       "Cool Colors",
       "Cancel",
     ];
-    const cancelButtonIndex = 5;
+    const cancelButtonIndex = options.length - 1;
 
     showActionSheetWithOptions(
         {
           options,
           cancelButtonIndex,
+            cancelButtonTintColor: '#d32f2f',
+            showSeparators: true,
+            separatorStyle: {
+                width: '100%',
+                backgroundColor: 'rgba(24,24,25,0.2)',
+                height: 1,
+                marginLeft: 0,
+                marginRight: 0,
+            },
+            containerStyle: {
+                alignItems: "center", justifyContent: "center",
+                borderRadius: 10,
+                margin: 10,
+                backgroundColor: '#F8E9D5',
+                opacity: 0.96,
+            },
           title: "Select a Color Scheme",
+            titleTextStyle: {
+                fontSize: 12,
+                textAlign: "center",
+            },
+            textStyle: {
+                textAlign: "center",
+                color: "rgba(24,24,25,0.81)",
+                width: '100%',
+                alignSelf: 'center',
+            },
         },
         (buttonIndex) => {
           if (buttonIndex !== undefined && buttonIndex !== cancelButtonIndex) {
@@ -63,17 +89,43 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
       "Casual",
       "Business",
       "Formal",
-      "Sport/Athletic",
-      "Party/Night Out",
+      "Sport",
+      "Party",
       "Cancel",
     ];
-    const cancelButtonIndex = 5;
+      const cancelButtonIndex = options.length - 1;
 
     showActionSheetWithOptions(
         {
           options,
           cancelButtonIndex,
+            cancelButtonTintColor: '#d32f2f',
+            showSeparators: true,
+            separatorStyle: {
+                width: '100%',
+                backgroundColor: 'rgba(24,24,25,0.2)',
+                height: 1,
+                marginLeft: 0,
+                marginRight: 0,
+            },
+            containerStyle: {
+                alignItems: "center", justifyContent: "center",
+                borderRadius: 10,
+                margin: 10,
+                backgroundColor: '#F8E9D5',
+                opacity: 0.96,
+            },
           title: "Select an Occasion",
+            titleTextStyle: {
+                fontSize: 12,
+                textAlign: "center",
+            },
+            textStyle: {
+                textAlign: "center",
+                color: "rgba(24,24,25,0.81)",
+                width: '100%',
+                alignSelf: 'center',
+            },
         },
         (buttonIndex) => {
           if (buttonIndex !== undefined && buttonIndex !== cancelButtonIndex) {

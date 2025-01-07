@@ -127,7 +127,29 @@ const Wardrobe = () => {
             {
                 options,
                 cancelButtonIndex,
+                cancelButtonTintColor: '#d32f2f',
                 destructiveButtonIndex: cancelButtonIndex,
+                showSeparators: true,
+                separatorStyle: {
+                    width: '100%',
+                    backgroundColor: 'rgba(24,24,25,0.2)',
+                    height: 1,
+                    marginLeft: 0,
+                    marginRight: 0,
+                },
+                containerStyle: {
+                    alignItems: "center", justifyContent: "center",
+                    borderRadius: 10,
+                    margin: 10,
+                    backgroundColor: '#F8E9D5',
+                    opacity: 0.96,
+                },
+                textStyle: {
+                    textAlign: "center",
+                    color: "rgba(24,24,25,0.81)",
+                    width: '100%',
+                    alignSelf: 'center',
+                },
             },
             (buttonIndex) => {
                 if (buttonIndex === 0) {

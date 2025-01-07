@@ -145,7 +145,7 @@ const StylistPage: React.FC = () => {
             const outfitsRef = collection(db, "outfits");
             const outfitData = {
                 userId: user.uid,
-                createdAt: new Date().toISOString(),
+                createdAt: new Date(),
                 outfit_id: formattedDate + stylePreferences.color + '-' + stylePreferences.occasion,
                 outfit_pieces: outfitToSave.outfit_pieces,
                 match: outfitToSave.match,

@@ -138,7 +138,7 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                     <Text className="text-secondary/60 dark:text-primary/60">Match: {currentOutfit.match}%</Text>
                 </View>
             </View>
-            
+
             <View className="absolute bottom-0 w-full px-4">
                 <TouchableOpacity
                     onPress={handleSaveOutfit}
@@ -151,10 +151,10 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                 >
                     <Text className="text-primary dark:text-secondary font-bold">
                         {isOutfitSaved
-                            ? "Saved to Wardrobe"
+                            ? "Added to Wardrobe"
                             : isSaving
-                                ? "Saving..."
-                                : "Save to Wardrobe"
+                                ? "Adding..."
+                                : "Add to Wardrobe"
                         }
                     </Text>
                 </TouchableOpacity>

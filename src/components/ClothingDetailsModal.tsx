@@ -3,14 +3,14 @@ import { ClothingItem } from "@/app/(tabs)/wardrobe";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
-interface ClothingDetailModalProps {
+interface ClothingDetailsModalProps {
     item: ClothingItem | null;
     isVisible: boolean;
     onClose: () => void;
     onDelete: (id: string) => void;
 }
 
-const ClothingDetailModal = ({ item, isVisible, onClose, onDelete }: ClothingDetailModalProps) => {
+const ClothingDetailsModal = ({ item, isVisible, onClose, onDelete }: ClothingDetailsModalProps) => {
     if (!item) return null;
 
     const formattedDate = new Date(item.uploadedAt.toMillis()).toLocaleDateString("en-GB");
@@ -79,7 +79,7 @@ const ClothingDetailModal = ({ item, isVisible, onClose, onDelete }: ClothingDet
 
                     <TouchableOpacity
                         onPress={() => onDelete(item.id)}
-                        className="bg-red-400 dark:bg-red-500 rounded-xl py-4 mt-8"
+                        className="bg-red-400 dark:bg-red-500 rounded-xl py-4 my-auto"
                     >
                         <Text className="text-center text-white font-bold text-lg">
                             Remove from Wardrobe
@@ -91,4 +91,4 @@ const ClothingDetailModal = ({ item, isVisible, onClose, onDelete }: ClothingDet
     );
 };
 
-export default ClothingDetailModal;
+export default ClothingDetailsModal;

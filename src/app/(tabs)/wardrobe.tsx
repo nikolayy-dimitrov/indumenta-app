@@ -1,14 +1,15 @@
-import { View, Text, Image, FlatList, Alert, TouchableOpacity } from "react-native";
+import { Alert, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 
-import { collection, query, where, Timestamp, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, query, Timestamp, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import ClothingDetailModal from "@/components/ClothingDetailsModal.tsx";
+import ClothingDetailsModal from "@/components/ClothingDetailsModal.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
+import OutfitDetailsModal from "@/components/OutfitDetailsModal.tsx";
 
 export interface ClothingItem {
     id: string;
@@ -20,14 +21,28 @@ export interface ClothingItem {
     subCategory: string;
 }
 
+export interface OutfitItem {
+    id: string;
+    label: string;
+    outfitPieces: { Top: string; Bottom: string; Shoes: string };
+    createdAt: Timestamp;
+    match: number;
+    stylePreferences: { color: string; occasion: string };
+}
+
 type SortOption = "newest" | "oldest" | "color";
+type ViewMode = "clothes" | "outfits";
 
 const Wardrobe = () => {
     const { user, isLoading, setIsLoading } = useContext(AuthContext);
     const [clothes, setClothes] = useState<ClothingItem[]>([]);
+    const [outfits, setOutfits] = useState<OutfitItem[]>([]);
+    const [viewMode, setViewMode] = useState<ViewMode>("clothes");
     const [sortBy, setSortBy] = useState<SortOption>("newest");
     const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedOutfit, setSelectedOutfit] = useState<OutfitItem | null>(null);
+    const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
 
     const { showActionSheetWithOptions } = useActionSheet();
 
@@ -37,43 +52,72 @@ const Wardrobe = () => {
             return;
         }
 
-        const clothesRef = collection(db, "clothes");
-        const q = query(clothesRef, where("userId", "==", user.uid));
+        const fetchClothes = () => {
+            const clothesRef = collection(db, "clothes");
+            const q = query(clothesRef, where("userId", "==", user.uid));
 
-        // Real-time listener
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const clothesData = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
+            return onSnapshot(q, (querySnapshot) => {
+                const clothesData = querySnapshot.docs.map((doc) => ({
                     id: doc.id,
-                    imageUrl: data.imageUrl,
-                    dominantColor: data.dominantColor,
-                    uploadedAt: data.uploadedAt,
-                    userId: data.userId,
-                    category: data.category,
-                    subCategory: data.subCategory
-                };
+                    ...doc.data(),
+                })) as ClothingItem[];
+
+                setClothes(clothesData);
+                setIsLoading(false);
             });
+        };
 
-            setClothes(clothesData);
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching clothes:", error);
-            setIsLoading(false);
-        });
+        const fetchOutfits = () => {
+            const outfitsRef = collection(db, "outfits");
+            const q = query(outfitsRef, where("userId", "==", user.uid));
 
-        // Clean up the listener on unmount
-        return () => unsubscribe();
+            return onSnapshot(q, (querySnapshot) => {
+                const outfitsData = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        outfitPieces: data.outfit_pieces,
+                        createdAt: data.createdAt,
+                        match: data.match,
+                        label: data.label,
+                        stylePreferences: data.stylePreferences,
+                    } as OutfitItem;
+                });
+
+                setOutfits(outfitsData);
+                setIsLoading(false);
+            });
+        };
+
+
+        const unsubscribeClothes = fetchClothes();
+        const unsubscribeOutfits = fetchOutfits();
+
+        return () => {
+            unsubscribeClothes();
+            unsubscribeOutfits();
+        };
     }, [user]);
 
-    const handleItemPress = (item: ClothingItem) => {
-        setSelectedItem(item);
-        setIsModalVisible(true);
+    const handleToggleView = (mode: ViewMode) => {
+        setViewMode(mode);
+    };
+
+    const handleItemPress = (item: ClothingItem | OutfitItem, type: "clothes" | "outfits") => {
+        if (type === "clothes") {
+            setSelectedItem(item as ClothingItem);
+            setIsModalVisible(true);
+        } else {
+            setSelectedOutfit(item as OutfitItem);
+            setIsOutfitModalVisible(true);
+        }
     };
 
     const handleCloseModal = () => {
         setIsModalVisible(false);
+        setIsOutfitModalVisible(false);
         setSelectedItem(null);
+        setSelectedOutfit(null);
     };
 
     const deleteItem = async (itemId: string) => {
@@ -182,52 +226,123 @@ const Wardrobe = () => {
 
     return (
         <SafeAreaView className="px-6 bg-primary dark:bg-secondary font-Josefin h-screen">
-            <Text className="uppercase text-2xl font-bold mb-4 text-secondary dark:text-primary">
+            <Text className="uppercase text-2xl font-bold my-4 text-secondary dark:text-primary">
                 Wardrobe
             </Text>
-            <TouchableOpacity onPress={handleSortOptions} className="bg-secondary/90 dark:bg-primary/85 rounded-md p-2 my-2">
-                <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">{sortBy}</Text>
-            </TouchableOpacity>
-            <FlatList
-                data={sortedClothes}
-                keyExtractor={(item) => item.id}
-                numColumns={2}
-                columnWrapperStyle={{ justifyContent: 'space-between' }}
-                renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleItemPress(item)} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
-                        <Image
-                            source={{ uri: item.imageUrl }}
-                            className="w-44 h-44 rounded-t-xl"
-                        />
-                        <View className="px-3 gap-2 flex-row items-center">
-                            <Text className="lowercase font-medium text-base text-secondary/90 dark:text-primary/90">
-                                {item.category}
-                            </Text>
-                            <View
-                                style={{ backgroundColor: item.dominantColor }}
-                                className="w-4 h-4 rounded"
-                            ></View>
-                        </View>
-                        {/*<TouchableOpacity*/}
-                        {/*    onPress={() => confirmDelete(item.id)}*/}
-                        {/*    className="p-2"*/}
-                        {/*>*/}
-                        {/*    <Text className="text-secondary font-semibold">Remove</Text>*/}
-                        {/*</TouchableOpacity>*/}
+            <View className="flex-row items-center justify-center w-full gap-4 mb-4">
+                <TouchableOpacity
+                    onPress={()=>handleToggleView('clothes')}
+                    className={`border border-secondary dark:border-primary py-3 rounded w-1/2 
+                    ${viewMode === 'clothes' && 'bg-secondary dark:bg-primary'}`}>
+                    <Text className={`text-secondary dark:text-primary text-center 
+                    ${viewMode === 'clothes' && 'text-primary dark:text-secondary font-medium'}`}>
+                        Clothes
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={()=>handleToggleView('outfits')}
+                    className={`border border-secondary dark:border-primary py-3 rounded w-1/2 
+                    ${viewMode === 'outfits' && 'bg-secondary dark:bg-primary'}`}>
+                    <Text className={`text-secondary dark:text-primary text-center 
+                    ${viewMode === 'outfits' && 'text-primary dark:text-secondary font-medium'}`}>
+                        Outfits
+                    </Text>
+                </TouchableOpacity>
+            </View>
+            {/* Display clothes */}
+            {viewMode === 'clothes' ? (
+                <View className="flex-row justify-center">
+                    <TouchableOpacity onPress={handleSortOptions} className="absolute bottom-2 z-10 w-1/2 mx-auto bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
+                        <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">
+                            {sortBy}
+                        </Text>
                     </TouchableOpacity>
-                )}
-                ListEmptyComponent={
-                    <View className="flex-1 h-full items-center justify-center py-32">
-                        <Text className="text-gray-500">No clothes found in your wardrobe.</Text>
-                    </View>
-                }
-            />
-            <ClothingDetailModal
-                item={selectedItem}
-                isVisible={isModalVisible}
-                onClose={handleCloseModal}
-                onDelete={confirmDelete}
-            />
+                    <FlatList
+                        data={sortedClothes}
+                        keyExtractor={(item) => item.id}
+                        numColumns={2}
+                        columnWrapperStyle={{ justifyContent: 'space-between' }}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleItemPress(item, 'clothes')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
+                                <Image
+                                    source={{ uri: item.imageUrl }}
+                                    className="w-44 h-44 rounded-t-xl"
+                                />
+                                <View className="px-3 gap-2 flex-row items-center">
+                                    <Text className="lowercase font-medium text-base text-secondary/90 dark:text-primary/90">
+                                        {item.category}
+                                    </Text>
+                                    <View
+                                        style={{ backgroundColor: item.dominantColor }}
+                                        className="w-4 h-4 rounded"
+                                    ></View>
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                        ListEmptyComponent={
+                            <View className="flex-1 h-full items-center justify-center py-32">
+                                <Text className="text-gray-500">No clothes found in your wardrobe.</Text>
+                            </View>
+                        }
+                    />
+                </View>
+            ) : (
+                // Display outfits
+                <FlatList
+                    data={outfits}
+                    keyExtractor={(item) => item.id}
+                    numColumns={2}
+                    columnWrapperStyle={{ justifyContent: 'space-between' }}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleItemPress(item, 'outfits')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
+                            <View className="w-44 h-52 flex-col items-center justify-center">
+                                <Image
+                                    source={{ uri: item.outfitPieces.Top }}
+                                    className="w-full h-1/3 rounded-t-xl"
+                                    resizeMode="contain"
+                                />
+                                <Image
+                                    source={{ uri: item.outfitPieces.Bottom }}
+                                    className="w-full h-1/3"
+                                    resizeMode="contain"
+                                />
+                                <Image
+                                    source={{ uri: item.outfitPieces.Shoes }}
+                                    className="w-full h-1/3 rounded-b-xl"
+                                    resizeMode="contain"
+                                />
+                            </View>
+                            <TouchableOpacity className="px-3 gap-2 flex-row items-center">
+                                <Text className="lowercase font-medium text-sm text-secondary/80 dark:text-primary/80">
+                                    {item.label ? item.label : 'Label outfit'}
+                                </Text>
+                            </TouchableOpacity>
+                        </TouchableOpacity>
+                    )}
+                    ListEmptyComponent={
+                        <View className="flex-1 h-full items-center justify-center py-32">
+                            <Text className="text-gray-500">No outfits found in your wardrobe.</Text>
+                        </View>
+                    }
+                />
+            )}
+            {isModalVisible && selectedItem && viewMode === "clothes" && (
+                <ClothingDetailsModal
+                    item={selectedItem}
+                    isVisible={isModalVisible}
+                    onClose={handleCloseModal}
+                    onDelete={confirmDelete}
+                />
+            )}
+
+            {isOutfitModalVisible && selectedOutfit && viewMode === "outfits" && (
+                <OutfitDetailsModal
+                    item={selectedOutfit}
+                    isVisible={isOutfitModalVisible}
+                    onClose={handleCloseModal}
+                    onDelete={confirmDelete}
+                />
+            )}
         </SafeAreaView>
     );
 };

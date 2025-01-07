@@ -7,8 +7,9 @@ import { db } from "@/../firebaseConfig.ts";
 import { AuthContext } from "@/context/AuthContext.tsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import ClothingDetailModal from "@/components/ClothingDetailsModal.tsx";
 
-interface ClothingItem {
+export interface ClothingItem {
     id: string;
     imageUrl: string;
     dominantColor: string;
@@ -24,9 +25,10 @@ const Wardrobe = () => {
     const { user, isLoading, setIsLoading } = useContext(AuthContext);
     const [clothes, setClothes] = useState<ClothingItem[]>([]);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
+    const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const { showActionSheetWithOptions } = useActionSheet();
-
 
     useEffect(() => {
         if (!user) {
@@ -63,6 +65,16 @@ const Wardrobe = () => {
         return () => unsubscribe();
     }, [user]);
 
+    const handleItemPress = (item: ClothingItem) => {
+        setSelectedItem(item);
+        setIsModalVisible(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalVisible(false);
+        setSelectedItem(null);
+    };
+
     const deleteItem = async (itemId: string) => {
         try {
             const itemDocRef = doc(db, "clothes", itemId);
@@ -80,7 +92,10 @@ const Wardrobe = () => {
             "Are you sure you want to remove this item?",
             [
                 { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive", onPress: () => deleteItem(itemId) }
+                { text: "Delete", style: "destructive", onPress: () => {
+                        deleteItem(itemId);
+                        handleCloseModal();
+                    }, }
             ]
         );
     };
@@ -159,7 +174,7 @@ const Wardrobe = () => {
                 numColumns={2}
                 columnWrapperStyle={{ justifyContent: 'space-between' }}
                 renderItem={({ item }) => (
-                    <View className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
+                    <TouchableOpacity onPress={() => handleItemPress(item)} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
                         <Image
                             source={{ uri: item.imageUrl }}
                             className="w-44 h-44 rounded-t-xl"
@@ -179,13 +194,19 @@ const Wardrobe = () => {
                         {/*>*/}
                         {/*    <Text className="text-secondary font-semibold">Remove</Text>*/}
                         {/*</TouchableOpacity>*/}
-                    </View>
+                    </TouchableOpacity>
                 )}
                 ListEmptyComponent={
                     <View className="flex-1 h-full items-center justify-center py-32">
                         <Text className="text-gray-500">No clothes found in your wardrobe.</Text>
                     </View>
                 }
+            />
+            <ClothingDetailModal
+                item={selectedItem}
+                isVisible={isModalVisible}
+                onClose={handleCloseModal}
+                onDelete={confirmDelete}
             />
         </SafeAreaView>
     );

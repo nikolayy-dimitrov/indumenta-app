@@ -1,5 +1,5 @@
 import { View, Text, Image, FlatList, Alert, TouchableOpacity } from "react-native";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { collection, query, where, Timestamp, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
@@ -8,6 +8,7 @@ import { AuthContext } from "@/context/AuthContext.tsx";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import ClothingDetailModal from "@/components/ClothingDetailsModal.tsx";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 export interface ClothingItem {
     id: string;
@@ -167,20 +168,17 @@ const Wardrobe = () => {
 
     if (!user) {
         return (
-            <View className="flex-1 justify-center items-center h-full font-Josefin">
-                <Text>Please log in to view your wardrobe.</Text>
+            <View className="flex-1 justify-center items-center h-full font-Josefin bg-primary dark:bg-secondary">
+                <Text className="font-Josefin text-primary dark:text-primary">Please log in to view your wardrobe.</Text>
             </View>
         );
     }
 
     if (isLoading) {
         return (
-            <View className="flex-1 justify-center items-center h-full font-Josefin">
-                <Text>Loading your wardrobe...</Text>
-            </View>
-        );
+            <LoadingScreen />
+        )
     }
-
 
     return (
         <SafeAreaView className="px-6 bg-primary dark:bg-secondary font-Josefin h-screen">

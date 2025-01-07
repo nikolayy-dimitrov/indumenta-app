@@ -13,6 +13,7 @@ import { db } from "@/../firebaseConfig.ts";
 import { faArrowRight, faImage, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 interface UploadProps {
     onNext: () => void;
@@ -207,9 +208,7 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
 
     if (isLoading) {
         return (
-            <View className="flex justify-center items-center h-screen font-Josefin">
-                <Text className="text-primary">Loading...</Text>
-            </View>
+            <LoadingScreen />
         )
     }
 

@@ -109,7 +109,11 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                     <Text className="text-secondary/60 dark:text-primary/60">Match: {currentOutfit.match}%</Text>
                 </View>
             </View>
+
             {/* TODO:Add a button to save outfit to user database */}
+            <TouchableOpacity disabled={true}>
+                <Text>Add to Wardrobe</Text>
+            </TouchableOpacity>
         </SafeAreaView>
     );
 };

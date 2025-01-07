@@ -5,6 +5,7 @@ import { AuthContext } from "@/context/AuthContext.tsx";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { faAngleLeft, faCalendarDay, faPaintbrush, faPalette } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 interface StylePreferences {
   color: string;
@@ -135,19 +136,17 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
     );
   };
 
-  if (!user) {
-    return (
-      <View className="flex justify-center items-center h-screen font-Josefin">
-        <Text>Please log in to continue.</Text>
-      </View>
-    );
-  }
+    if (!user) {
+        return (
+            <View className="flex-1 justify-center items-center h-full font-Josefin bg-primary dark:bg-secondary">
+                <Text className="font-Josefin text-primary dark:text-primary">Please log in to continue.</Text>
+            </View>
+        );
+    }
 
   if (isLoading) {
     return (
-        <View className="flex justify-center items-center h-screen font-Josefin">
-          <Text className="text-primary">Loading</Text>
-        </View>
+        <LoadingScreen />
     )
   }
 

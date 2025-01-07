@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from "@/../firebaseConfig";
 
 import { BACKEND_URL } from "@env";
@@ -114,6 +114,54 @@ const StylistPage: React.FC = () => {
         }
     };
 
+    // Check whether the outfit is already in the firebase collection
+    const checkIfOutfitSaved = async (outfitId: string) => {
+        if (!user) return false;
+
+        try {
+            const outfitsRef = collection(db, "outfits");
+            const q = query(
+                outfitsRef,
+                where("userId", "==", user.uid),
+                where("outfit_id", "==", outfitId)
+            );
+            const querySnapshot = await getDocs(q);
+
+            return !querySnapshot.empty;
+        } catch (error) {
+            console.error("Error checking saved outfit:", error);
+            return false;
+        }
+    };
+
+    // Save generate outfit function
+    const saveOutfit = async (outfitToSave: OutfitRecommendation) => {
+        if (!user) return;
+
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().split('T')[0];
+
+        try {
+            const outfitsRef = collection(db, "outfits");
+            const outfitData = {
+                userId: user.uid,
+                createdAt: new Date().toISOString(),
+                outfit_id: formattedDate + stylePreferences.color + '-' + stylePreferences.occasion,
+                outfit_pieces: outfitToSave.outfit_pieces,
+                match: outfitToSave.match,
+                stylePreferences: {
+                    color: stylePreferences.color,
+                    occasion: stylePreferences.occasion,
+                }
+            };
+
+            await addDoc(outfitsRef, outfitData);
+        } catch (error) {
+            console.error("Error saving outfit:", error);
+            throw error;
+        }
+    };
+
     // Render current screen
     const renderScreen = () => {
         switch (currentScreen) {
@@ -133,6 +181,8 @@ const StylistPage: React.FC = () => {
                     <OutfitDisplay
                         outfit={outfit}
                         onBack={() => navigateTo('styleSelection')}
+                        onSaveOutfit={saveOutfit}
+                        checkIfOutfitSaved={checkIfOutfitSaved}
                     />
                 );
             default:

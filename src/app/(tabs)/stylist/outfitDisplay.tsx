@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import {View, Text, Image, TouchableOpacity, ScrollView, useColorScheme} from "react-native";
-import {faAngleLeft, faCircleLeft, faCircleRight} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {SafeAreaView} from "react-native-safe-area-context";
-import CustomButton from "@/components/CustomButton.tsx";
+import React, { useEffect, useState } from "react";
+import { Alert, View, Text, Image, TouchableOpacity, useColorScheme } from "react-native";
+import { faAngleLeft, faCircleLeft, faCircleRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface OutfitRecommendation {
     outfit_id: string;
@@ -18,14 +17,20 @@ interface OutfitRecommendation {
 interface OutfitDisplayScreenProps {
     outfit: OutfitRecommendation[];
     onBack: () => void;
+    onSaveOutfit: (outfit: OutfitRecommendation) => Promise<void>;
+    checkIfOutfitSaved: (outfitId: string) => Promise<boolean>;
 }
 
 const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                                                                      outfit,
                                                                      onBack,
+                                                                     onSaveOutfit,
+                                                                     checkIfOutfitSaved,
                                                                  }) => {
     const [currentOutfitIndex, setCurrentOutfitIndex] = useState(0);
     const currentOutfit = outfit[currentOutfitIndex];
+    const [isSaving, setIsSaving] = useState(false);
+    const [isOutfitSaved, setIsOutfitSaved] = useState(false);
 
     const colorScheme = useColorScheme();
     const dynamicIconStyle = {
@@ -40,13 +45,37 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
         setCurrentOutfitIndex((prev) => (prev - 1 + outfit.length) % outfit.length);
     };
 
+    useEffect(() => {
+        checkCurrentOutfitSaved();
+    }, [currentOutfitIndex]);
+
+    const checkCurrentOutfitSaved = async () => {
+        if (currentOutfit) {
+            const saved = await checkIfOutfitSaved(currentOutfit.outfit_id);
+            setIsOutfitSaved(saved);
+        }
+    };
+
+    const handleSaveOutfit = async () => {
+        try {
+            setIsSaving(true);
+            await onSaveOutfit(currentOutfit);
+            setIsOutfitSaved(true);
+            Alert.alert("Success", "Outfit saved to your wardrobe!");
+        } catch (error) {
+            Alert.alert("Error", "Failed to save outfit. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     if (!currentOutfit) {
         return (
             <View className="flex-1 justify-center items-center p-6">
-                <Text className="text-2xl font-bold mb-4">No outfits generated</Text>
+                <Text className="text-2xl font-bold mb-4 text-secondary dark:text-primary">No outfits generated</Text>
                 <TouchableOpacity
                     onPress={onBack}
-                    className="w-full bg-secondary dark:bg-primary py-2 px-4 rounded"
+                    className="w-full bg-secondary dark:bg-primary py-2 px-4 rounded absolute bottom-8"
                 >
                     <Text className="text-primary dark:text-secondary text-center font-bold">
                         Back to Style Selection
@@ -92,7 +121,7 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                     )}
                 </View>
 
-                <View className="flex-row justify-between items-center w-10/12 mx-auto mt-6">
+                <View className="flex-row justify-between items-center w-10/12 mx-auto mt-4">
                     <TouchableOpacity
                         onPress={handlePrevious}
                     >
@@ -109,11 +138,27 @@ const OutfitDisplayScreen: React.FC<OutfitDisplayScreenProps> = ({
                     <Text className="text-secondary/60 dark:text-primary/60">Match: {currentOutfit.match}%</Text>
                 </View>
             </View>
-
-            {/* TODO:Add a button to save outfit to user database */}
-            <TouchableOpacity disabled={true}>
-                <Text>Add to Wardrobe</Text>
-            </TouchableOpacity>
+            
+            <View className="absolute bottom-0 w-full px-4">
+                <TouchableOpacity
+                    onPress={handleSaveOutfit}
+                    disabled={isSaving || isOutfitSaved}
+                    className={`py-3 px-6 rounded-lg items-center ${
+                        isOutfitSaved
+                            ? 'bg-secondary/40 dark:bg-primary/40'
+                            : 'bg-secondary dark:bg-primary'
+                    }`}
+                >
+                    <Text className="text-primary dark:text-secondary font-bold">
+                        {isOutfitSaved
+                            ? "Saved to Wardrobe"
+                            : isSaving
+                                ? "Saving..."
+                                : "Save to Wardrobe"
+                        }
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 };

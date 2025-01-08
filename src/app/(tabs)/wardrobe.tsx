@@ -225,7 +225,7 @@ const Wardrobe = () => {
     }
 
     return (
-        <SafeAreaView className="px-6 bg-primary dark:bg-secondary font-Josefin h-screen">
+        <SafeAreaView className="px-6 mx-auto bg-primary dark:bg-secondary font-Josefin h-screen w-full">
             <Text className="uppercase text-2xl font-bold my-4 text-secondary dark:text-primary">
                 Wardrobe
             </Text>
@@ -256,19 +256,21 @@ const Wardrobe = () => {
             </View>
             {/* Display clothes */}
             {viewMode === 'clothes' ? (
-                <View className="flex-row justify-center">
-                    <TouchableOpacity onPress={handleSortOptions} className="absolute bottom-6 z-10 w-1/2 mx-auto bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
+                <View className="flex-1 pb-8 items-center overflow-hidden">
+                    <TouchableOpacity onPress={handleSortOptions} className="absolute bottom-8 z-10 w-1/2 bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
                         <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">
                             {sortBy}
                         </Text>
                     </TouchableOpacity>
                     <FlatList
+                        className="w-full"
+                        showsVerticalScrollIndicator={false}
                         data={sortedClothes}
                         keyExtractor={(item) => item.id}
                         numColumns={2}
                         columnWrapperStyle={{ justifyContent: 'space-between' }}
                         renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleItemPress(item, 'clothes')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
+                            <TouchableOpacity onPress={() => handleItemPress(item, 'clothes')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 my-2">
                                 <Image
                                     source={{ uri: item.imageUrl }}
                                     className="w-44 h-44 rounded-t-xl"
@@ -294,12 +296,14 @@ const Wardrobe = () => {
             ) : (
                 // Display outfits
                 <FlatList
+                    className="w-full"
+                    showsVerticalScrollIndicator={false}
                     data={outfits}
                     keyExtractor={(item) => item.id}
                     numColumns={2}
                     columnWrapperStyle={{ justifyContent: 'space-between' }}
                     renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleItemPress(item, 'outfits')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 mx-1 my-2">
+                        <TouchableOpacity onPress={() => handleItemPress(item, 'outfits')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 my-2">
                             <View className="w-44 h-52 flex-col items-center justify-center">
                                 <Image
                                     source={{ uri: item.outfitPieces.Top }}

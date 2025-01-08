@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, useColorScheme } from "react-native";
-import { Redirect, router } from "expo-router";
+import { View, Text, useColorScheme, ImageBackground } from "react-native";
+import { router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 
 import '../utils/fontawesome';
@@ -13,22 +13,24 @@ export default function App() {
 
   return (
           <SafeAreaView className="bg-primary dark:bg-secondary h-full">
-              <ScrollView contentContainerStyle={{ height: "100%" }}>
-                <View className="w-full justify-center items-center h-full px-4">
-                    <Text className="text-3xl font-bold leading-tight font-Josefin text-secondary dark:text-primary">
+                <View className="w-full justify-center items-center h-full">
+                    <Text
+                        className="text-3xl font-bold leading-tight font-Josefin
+                        text-primary dark:text-secondary bg-secondary/90 dark:bg-primary/90 py-2 px-4 rounded-sm">
                         INDUMENTA
                     </Text>
-                    <View className="bg-secondary dark:bg-primary rounded-xl w-1/2 mt-4">
+                    <View
+                        className="absolute bottom-12 bg-secondary dark:bg-primary rounded-xl w-1/2 mt-4
+                        shadow shadow-primary dark:shadow-secondary">
                         <CustomButton
                             title="Begin styling"
-                            handlePress={() => router.push(user ? '/wardrobe' : '/login')}
+                            handlePress={() => router.push(user ? '/wardrobe' : '/onboard')}
                         />
                     </View>
                 </View>
-              </ScrollView>
               <StatusBar
                   backgroundColor={colorScheme === "dark" ? "#181819" : "#F8E9D5"}
-                  style={colorScheme === "dark" ? "light" : "dark"}
+                  style={colorScheme === "light" ? "light" : "dark"}
               />
           </SafeAreaView>
   )

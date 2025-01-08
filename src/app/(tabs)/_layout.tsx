@@ -8,7 +8,7 @@ const TabsLayout = () => {
                 screenOptions={{
                     tabBarStyle: {
                         backgroundColor: '#181819',
-                        height: 56,
+                        height: 60,
                         borderColor: '#181819'
                     },
                     tabBarActiveTintColor: '#B5FED9',

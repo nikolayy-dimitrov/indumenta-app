@@ -234,8 +234,11 @@ const Wardrobe = () => {
                     onPress={()=>handleToggleView('clothes')}
                     className={`border border-secondary dark:border-primary py-3 rounded w-1/2 
                     ${viewMode === 'clothes' && 'bg-secondary dark:bg-primary'}`}>
-                    <Text className={`text-secondary dark:text-primary text-center 
-                    ${viewMode === 'clothes' && 'text-primary dark:text-secondary font-medium'}`}>
+                    <Text className={`text-center 
+                    ${viewMode === 'clothes' 
+                        ? 'text-primary dark:text-secondary font-medium' 
+                        : 'text-secondary dark:text-primary'
+                    }`}>
                         Clothes
                     </Text>
                 </TouchableOpacity>
@@ -243,8 +246,10 @@ const Wardrobe = () => {
                     onPress={()=>handleToggleView('outfits')}
                     className={`border border-secondary dark:border-primary py-3 rounded w-1/2 
                     ${viewMode === 'outfits' && 'bg-secondary dark:bg-primary'}`}>
-                    <Text className={`text-secondary dark:text-primary text-center 
-                    ${viewMode === 'outfits' && 'text-primary dark:text-secondary font-medium'}`}>
+                    <Text className={`text-center 
+                    ${viewMode === 'outfits' 
+                        ? 'text-primary dark:text-secondary font-medium'
+                        : 'text-secondary dark:text-primary'}`}>
                         Outfits
                     </Text>
                 </TouchableOpacity>
@@ -252,7 +257,7 @@ const Wardrobe = () => {
             {/* Display clothes */}
             {viewMode === 'clothes' ? (
                 <View className="flex-row justify-center">
-                    <TouchableOpacity onPress={handleSortOptions} className="absolute bottom-2 z-10 w-1/2 mx-auto bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
+                    <TouchableOpacity onPress={handleSortOptions} className="absolute bottom-6 z-10 w-1/2 mx-auto bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
                         <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">
                             {sortBy}
                         </Text>

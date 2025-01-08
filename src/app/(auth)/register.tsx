@@ -1,79 +1,173 @@
-import { View, Text, ScrollView, Alert, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, useColorScheme } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createUserWithEmailAndPassword } from "@firebase/auth";
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, updateProfile } from "@firebase/auth";
 import { auth } from "@/../firebaseConfig"
 import { router } from "expo-router";
-import CustomButton from "@/components/CustomButton";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
+
+type RegisterScreen = 'email' | 'password' | 'username';
 
 const Register: React.FC = () => {
-    const [name, setName] = useState<string>('');
+    const [currentScreen, setCurrentScreen] = useState<RegisterScreen>('email')
+    const [username, setUsername] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const handleRegister = async () => {
-        if (password !== confirmPassword) {
-            setError("Passwords do not match");
-            return;
-        }
+    const colorScheme = useColorScheme();
+    const dynamicIconStyle = {
+        color: colorScheme === 'dark' ? "#F8E9D5" : "#181819",
+    }
 
+    const handleRegister = async () => {
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            router.push("/login");
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user
+
+            if (user) {
+                await updateProfile(user, { displayName: username });
+            }
+
+            router.push("/home");
         } catch (err) {
-            setError((err as Error).message);
+            if ((err as any).code === 'auth/email-already-in-use') {
+                setError('This email address is already in use. Please try logging in or use a different email.');
+            } else {
+                setError((err as Error).message); // General error handling
+            }
         }
     };
 
+    const handleOnNext = async () => {
+        if (currentScreen === 'email') {
+            if (!validateEmail(email)) {
+                setError('Please enter a valid email address.');
+                return;
+            }
+
+            const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+            if (signInMethods.length > 0) {
+                setError('This email is already in use. Please use a different email or log in.');
+                return;
+            }
+
+            setError('');
+            setCurrentScreen('password');
+        } else if (currentScreen === 'password') {
+            if (!validatePassword(password)) {
+                setError(
+                    'Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.'
+                );
+                return;
+            }
+            setError('');
+            setCurrentScreen('username');
+        } else {
+            if (!username) {
+                setError('Username cannot be empty.');
+                return;
+            }
+            setError('');
+            await handleRegister();
+        }
+    }
+
+    const validateEmail = (email: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    const validatePassword = (password: string): boolean => {
+        // Minimum 8 characters, at least one uppercase, one lowercase, one number, and one special character
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return passwordRegex.test(password);
+    };
+
+
     return (
-        <SafeAreaView className="bg-primary dark:bg-secondary h-full font-Josefin">
-            <ScrollView>
-                <View className="w-full h-full justify-center px-6 my-6">
-                    <Text className="text-secondary dark:text-primary text-4xl font-semibold">
-                        Sign Up
+        <SafeAreaView className="bg-primary dark:bg-secondary h-full font-Josefin items-center">
+            {error ? (
+                <Text className="absolute bottom-20 text-red-600 text-center my-2">{error}</Text>
+            ) : null}
+            <View className="w-full h-full my-6 px-6">
+                <View className="w-full flex-row items-center justify-center">
+                    <TouchableOpacity onPress={router.back} className="p-2 -mx-2">
+                        <FontAwesomeIcon icon={faAngleLeft} size={20} style={dynamicIconStyle} />
+                    </TouchableOpacity>
+                    <Text className="text-3xl font-semibold text-secondary dark:text-primary mx-auto">
+                        INDUMENTA
                     </Text>
-                    <View className="mt-4">
-                        <View className="mb-4">
-                            <Text className="text-secondary dark:text-primary font-bold mb-2">Email</Text>
+                </View>
+                {currentScreen === 'email' ? (
+                    <View className="flex-1 justify-center">
+                        <View className="w-full h-1/2 gap-6">
+                            <Text className="text-secondary dark:text-primary font-medium lowercase tracking-wider">
+                                Enter your email
+                            </Text>
                             <TextInput
                                 value={email}
                                 onChangeText={setEmail}
-                                placeholder=""
-                                className="w-full py-2 px-3 border border-secondary dark:border-primary rounded focus:outline-none text-secondary dark:text-primary"
+                                placeholder="EMAIL"
+                                className="w-full py-2 px-2 border-b border-secondary dark:border-primary
+                                 focus:outline-none text-secondary dark:text-primary
+                                 placeholder:text-secondary/70 placeholder:dark:text-primary/70"
                                 autoCapitalize="none"
                                 keyboardType="email-address"
+                                textContentType="emailAddress"
+                                maxLength={80}
                             />
                         </View>
-                        <View className="mb-4">
-                            <Text className="text-secondary dark:text-primary font-bold mb-2">Password</Text>
+                    </View>
+                ) : currentScreen === 'password' ? (
+                    <View className="flex-1 justify-center">
+                        <View className="w-full h-1/2 gap-6">
+                            <Text className="text-secondary dark:text-primary font-medium lowercase tracking-wider">
+                                Create a password
+                            </Text>
                             <TextInput
                                 value={password}
                                 onChangeText={setPassword}
-                                placeholder=""
-                                className="w-full py-2 px-3 border border-secondary dark:border-primary rounded focus:outline-none text-secondary dark:text-primary"
-                                secureTextEntry
+                                placeholder="PASSWORD"
+                                className="w-full py-2 px-2 border-b border-secondary dark:border-primary
+                                 focus:outline-none text-secondary dark:text-primary
+                                 placeholder:text-secondary/70 placeholder:dark:text-primary/70"
+                                secureTextEntry={true}
+                                keyboardType="default"
+                                maxLength={80}
+                                textContentType="newPassword"
+                                autoCapitalize={'none'}
                             />
                         </View>
-                        <View className="mb-6">
-                            <Text className="text-secondary dark:text-primary font-bold mb-2">
-                                Confirm Password
-                            </Text>
-                            <TextInput
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                placeholder=""
-                                className="w-full py-2 px-3 border border-secondary dark:border-primary rounded focus:outline-none text-secondary dark:text-primary"
-                                secureTextEntry
-                            />
-                        </View>
-                        <CustomButton
-                            handlePress={handleRegister}
-                            title="Register" />
                     </View>
-                </View>
-            </ScrollView>
+                ) : currentScreen === 'username' && (
+                    <View className="flex-1 justify-center">
+                        <View className="w-full h-1/2 gap-6">
+                            <Text className="text-secondary dark:text-primary font-medium lowercase tracking-wider">
+                                Enter your username
+                            </Text>
+                        <TextInput
+                            value={username}
+                            onChangeText={setUsername}
+                            placeholder="USERNAME"
+                            textContentType="username"
+                            maxLength={30}
+                            className="w-full py-2 px-2 border-b border-secondary dark:border-primary
+                                 focus:outline-none text-secondary dark:text-primary
+                                 placeholder:text-secondary/70 placeholder:dark:text-primary/70"
+                        />
+                        </View>
+                    </View>
+                )}
+            </View>
+            <TouchableOpacity
+                onPress={handleOnNext}
+                className="absolute bottom-12 p-4 w-11/12 bg-secondary dark:bg-primary rounded-xl">
+                <Text className="text-primary dark:text-secondary text-center font-medium lowercase">
+                    Continue
+                </Text>
+            </TouchableOpacity>
         </SafeAreaView>
     )
 }

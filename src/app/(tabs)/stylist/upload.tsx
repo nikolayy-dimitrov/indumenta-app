@@ -13,7 +13,7 @@ import { pickImage, requestCameraPermission, requestGalleryPermission, takePhoto
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
-import { faArrowRight, faImage, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {faArrowRight, faImage, faUpload, faXmark} from "@fortawesome/free-solid-svg-icons";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
@@ -125,11 +125,17 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
     }
 
     return (
-        <SafeAreaView className="flex-1 justify-center items-center p-4">
+        <SafeAreaView className="flex-1 justify-center items-center px-4 pb-20">
 
             {/* Display Selected Image */}
             {imageUri ? (
                 <View className="my-4 overflow-hidden rounded-2xl h-96 w-11/12">
+                    <TouchableOpacity
+                        onPress={() => setImageUri(null)}
+                        className="absolute top-0 right-0 p-4 z-10"
+                    >
+                        <FontAwesomeIcon icon={faXmark} size={20} style={dynamicIconStyle} />
+                    </TouchableOpacity>
                     <Image
                         source={{ uri: imageUri }}
                         className="w-full h-full"
@@ -137,34 +143,24 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
                     />
                 </View>
             ) : (
-                <View className="my-4 overflow-hidden bg-secondary/5 dark:bg-primary/5 rounded h-96 w-11/12 items-center justify-center flex">
-                    <FontAwesomeIcon icon={faImage} style={dynamicIconStyle} size={20} />
+                <View className='flex-1 items-center justify-center w-11/12 gap-0.5'>
+                    <TouchableOpacity
+                        onPress={() => pickImage(setImageUri, requestGalleryPermission)}
+                        className="overflow-hidden border border-secondary dark:border-primary rounded-t-lg h-1/3 w-full items-center justify-center flex">
+                        <FontAwesomeIcon icon={faImage} style={dynamicIconStyle} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => takePhoto(setImageUri, requestCameraPermission)}
+                        className="overflow-hidden border border-secondary dark:border-primary rounded-b-lg h-1/3 w-full items-center justify-center flex">
+                        <FontAwesomeIcon icon={faCamera} style={dynamicIconStyle} size={20} />
+                    </TouchableOpacity>
                 </View>
             )}
 
-            {/* Image Selection Options */}
-            <View className="flex items-center justify-center gap-2 w-11/12 my-4">
-                <CustomButton
-                    icon={faImage}
-                    handlePress={() => pickImage(setImageUri, requestGalleryPermission)}
-                    containerStyles="w-full"
-                    textStyles="mx-2"
-                    title="Gallery"
-                />
-
-                <CustomButton
-                    icon={faCamera}
-                    handlePress={() => takePhoto(setImageUri, requestCameraPermission)}
-                    containerStyles="w-full"
-                    textStyles="mx-2"
-                    title="Take Photo"
-                />
-            </View>
-
             <TouchableOpacity
                 onPress={() => handleUploadImage}
-                className="flex-row items-center justify-center gap-2 bg-primary dark:bg-secondary w-full py-4 my-2
-                 border border-secondary/60 dark:border-primary/50 rounded-lg disabled:opacity-60"
+                className="flex-row items-center justify-center gap-2 bg-primary dark:bg-secondary w-full py-4 my-8
+                 border border-secondary/60 dark:border-primary/50 rounded-lg disabled:hidden"
                 disabled={!imageUri || isLoading}
             >
                 <FontAwesomeIcon
@@ -179,11 +175,11 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
             {clothesCount >= 3 ? (
                 <TouchableOpacity
                     onPress={() => handleNext()}
-                    className="flex-row items-center justify-center gap-2 bg-content/80 w-full py-4 border border-secondary/40 rounded-lg absolute bottom-0">
-                    <Text className="font-medium">
+                    className="flex-row items-center justify-center gap-2 bg-secondary/95 w-full py-4 border border-secondary/40 dark:border-primary/40 rounded-lg absolute bottom-4">
+                    <Text className="font-medium text-primary">
                         Select Style
                     </Text>
-                    <FontAwesomeIcon icon={faArrowRight} />
+                    <FontAwesomeIcon icon={faArrowRight} style={{ color: "#F8E9D5" }} />
                 </TouchableOpacity>
                 ) : (
                     <View className="py-8 top-8 absolute">

@@ -31,6 +31,9 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
   const dynamicIconStyle = {
     color: colorScheme === "dark" ? "#F8E9D5" : "#181819",
   };
+  const reverseIconStyle = {
+    color: colorScheme === "light" ? "#F8E9D5" : "#181819",
+  };
 
   const { showActionSheetWithOptions } = useActionSheet();
 
@@ -185,13 +188,12 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
 
       <TouchableOpacity
         onPress={onNext}
-        className="absolute bottom-0 flex-row w-full items-center justify-center gap-2 bg-content/80 p-4 rounded
-                  border border-secondary/40 dark:border-primary/50"
+        className="flex-row items-center justify-center gap-2 bg-secondary/95 dark:bg-primary/95 w-full py-4 border border-secondary/40 dark:border-primary/40 rounded-lg absolute bottom-4"
       >
-        <Text className="text-center text-secondary font-medium">
+        <Text className="font-medium text-primary dark:text-secondary">
           Generate Outfit
         </Text>
-        <FontAwesomeIcon icon={faPaintbrush} />
+        <FontAwesomeIcon icon={faPaintbrush} style={reverseIconStyle} />
       </TouchableOpacity>
     </SafeAreaView>
   );

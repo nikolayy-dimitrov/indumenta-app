@@ -1,43 +1,30 @@
 import { Alert, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 
-import { collection, deleteDoc, doc, onSnapshot, query, Timestamp, where } from "firebase/firestore";
+import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
+import { SortOption, ViewMode } from "@/types/wardrobe.ts";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import { useLocalSearchParams } from 'expo-router';
+
 import ClothingDetailsModal from "@/components/ClothingDetailsModal.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import OutfitDetailsModal from "@/components/OutfitDetailsModal.tsx";
 
-export interface ClothingItem {
-    id: string;
-    imageUrl: string;
-    dominantColor: string;
-    uploadedAt: Timestamp;
-    userId: string;
-    category: string;
-    subCategory: string;
-}
-
-export interface OutfitItem {
-    id: string;
-    label: string;
-    outfitPieces: { Top: string; Bottom: string; Shoes: string };
-    createdAt: Timestamp;
-    match: number;
-    stylePreferences: { color: string; occasion: string };
-}
-
-type SortOption = "newest" | "oldest" | "color";
-type ViewMode = "clothes" | "outfits";
+import { ClothingItem, OutfitItem } from "@/types/wardrobe";
+import { useClothes, useOutfits } from "@/hooks/useWardrobe.ts";
 
 const Wardrobe = () => {
     const { user, isLoading, setIsLoading } = useContext(AuthContext);
-    const [clothes, setClothes] = useState<ClothingItem[]>([]);
-    const [outfits, setOutfits] = useState<OutfitItem[]>([]);
-    const [viewMode, setViewMode] = useState<ViewMode>("clothes");
+    const { viewMode: initialViewMode = 'clothes' } = useLocalSearchParams<{ viewMode: ViewMode }>();
+
+    const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
+    const { outfits, isLoading: isOutfitsLoading } = useOutfits(user?.uid);
+    const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
     const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,59 +32,6 @@ const Wardrobe = () => {
     const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
 
     const { showActionSheetWithOptions } = useActionSheet();
-
-    useEffect(() => {
-        if (!user) {
-            setIsLoading(false);
-            return;
-        }
-
-        const fetchClothes = () => {
-            const clothesRef = collection(db, "clothes");
-            const q = query(clothesRef, where("userId", "==", user.uid));
-
-            return onSnapshot(q, (querySnapshot) => {
-                const clothesData = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as ClothingItem[];
-
-                setClothes(clothesData);
-                setIsLoading(false);
-            });
-        };
-
-        const fetchOutfits = () => {
-            const outfitsRef = collection(db, "outfits");
-            const q = query(outfitsRef, where("userId", "==", user.uid));
-
-            return onSnapshot(q, (querySnapshot) => {
-                const outfitsData = querySnapshot.docs.map((doc) => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        outfitPieces: data.outfit_pieces,
-                        createdAt: data.createdAt,
-                        match: data.match,
-                        label: data.label,
-                        stylePreferences: data.stylePreferences,
-                    } as OutfitItem;
-                });
-
-                setOutfits(outfitsData);
-                setIsLoading(false);
-            });
-        };
-
-
-        const unsubscribeClothes = fetchClothes();
-        const unsubscribeOutfits = fetchOutfits();
-
-        return () => {
-            unsubscribeClothes();
-            unsubscribeOutfits();
-        };
-    }, [user]);
 
     const handleToggleView = (mode: ViewMode) => {
         setViewMode(mode);
@@ -213,12 +147,14 @@ const Wardrobe = () => {
     if (!user) {
         return (
             <View className="flex-1 justify-center items-center h-full font-Josefin bg-primary dark:bg-secondary">
-                <Text className="font-Josefin text-primary dark:text-primary">Please log in to view your wardrobe.</Text>
+                <Text className="font-Josefin text-primary dark:text-primary">
+                    Please log in to view your wardrobe.
+                </Text>
             </View>
         );
     }
 
-    if (isLoading) {
+    if (isClothesLoading || isOutfitsLoading) {
         return (
             <LoadingScreen />
         )

@@ -1,5 +1,7 @@
 import { Tabs, Redirect } from "expo-router";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {StatusBar} from "expo-status-bar";
+import {colorScheme} from "nativewind";
 
 const TabsLayout = () => {
     return (
@@ -9,14 +11,13 @@ const TabsLayout = () => {
                     tabBarStyle: {
                         backgroundColor: '#181819',
                         height: 60,
-                        borderColor: '#181819'
+                        borderColor: '#181819',
                     },
                     tabBarActiveTintColor: '#B5FED9',
                     tabBarInactiveTintColor: '#F8E9D5',
                     tabBarLabelStyle: {
                         fontSize: 12,
                     },
-
                 }}
             >
                 <Tabs.Screen
@@ -83,6 +84,10 @@ const TabsLayout = () => {
                     }}
                 />
             </Tabs>
+            <StatusBar
+                backgroundColor={colorScheme.get() === "dark" ? "#181819" : "#F8E9D5"}
+                style={colorScheme.get() === "light" ? "light" : "dark"}
+            />
         </>
     )
 }

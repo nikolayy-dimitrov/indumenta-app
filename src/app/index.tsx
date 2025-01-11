@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, useColorScheme, ImageBackground } from "react-native";
-import { router } from "expo-router";
+import { View, Text, useColorScheme } from "react-native";
+import { Redirect, router } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 
 import '../utils/fontawesome';
@@ -9,7 +9,13 @@ import { StatusBar } from "expo-status-bar";
 
 export default function App() {
     const colorScheme = useColorScheme();
-    const { user } = useAuth();
+    const { user, isLoading } = useAuth();
+
+    if (!isLoading && user) {
+        return (
+            <Redirect href={'/home'}/>
+        )
+    }
 
   return (
           <SafeAreaView className="bg-primary dark:bg-secondary h-full">

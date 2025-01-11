@@ -1,5 +1,5 @@
 import { Alert, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
@@ -9,7 +9,7 @@ import { SortOption, ViewMode } from "@/types/wardrobe.ts";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import ClothingDetailsModal from "@/components/ClothingDetailsModal.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
@@ -19,7 +19,7 @@ import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 import { useClothes, useOutfits } from "@/hooks/useWardrobe.ts";
 
 const Wardrobe = () => {
-    const { user, isLoading, setIsLoading } = useContext(AuthContext);
+    const { user  } = useContext(AuthContext);
     const { viewMode: initialViewMode = 'clothes' } = useLocalSearchParams<{ viewMode: ViewMode }>();
 
     const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
@@ -33,8 +33,13 @@ const Wardrobe = () => {
 
     const { showActionSheetWithOptions } = useActionSheet();
 
+    useEffect(() => {
+        setViewMode(initialViewMode);
+    }, [initialViewMode]);
+
     const handleToggleView = (mode: ViewMode) => {
         setViewMode(mode);
+        router.setParams({ viewMode: mode });
     };
 
     const handleItemPress = (item: ClothingItem | OutfitItem, type: "clothes" | "outfits") => {

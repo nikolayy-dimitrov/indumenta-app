@@ -1,12 +1,15 @@
+import React, { useState, useEffect } from "react";
 import { View, Text, Modal, Image, TouchableOpacity, useColorScheme, TextInput, Animated } from "react-native";
-import { OutfitItem } from "@/types/wardrobe";
+
 import { faCircleCheck, faXmark, faHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import React, { useState, useEffect } from "react";
-import { db } from "@/firebaseConfig";
+
 import { doc, updateDoc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { db } from "@/firebaseConfig";
+
 import usePanDraggable from "@/hooks/usePanDraggable";
+import { OutfitItem } from "@/types/wardrobe";
 
 interface OutfitDetailsModalProps {
     item: OutfitItem | null;
@@ -14,6 +17,7 @@ interface OutfitDetailsModalProps {
     onClose: () => void;
     onDelete: (id: string) => void;
     currentUserId: string;
+    isOwner?: boolean;
 }
 
 const OutfitDetailsModal = ({
@@ -21,7 +25,8 @@ const OutfitDetailsModal = ({
                                 isVisible,
                                 onClose,
                                 onDelete,
-                                currentUserId
+                                currentUserId,
+                                isOwner: isOwnerProp
                             }: OutfitDetailsModalProps) => {
     if (!item) return null;
 
@@ -36,7 +41,7 @@ const OutfitDetailsModal = ({
         color: colorScheme === "light" ? "#F8E9D5" : "#181819",
     };
 
-    const isOwner = currentUserId === item.userId;
+    const isOwner = isOwnerProp ?? currentUserId === item.userId;
 
     useEffect(() => {
         checkIfLiked();
@@ -239,7 +244,7 @@ const OutfitDetailsModal = ({
                             <TouchableOpacity
                                 onPress={toggleLike}
                                 className={`rounded-xl py-4 mt-4 flex-row justify-center items-center gap-2
-                                    ${isLiked ? 'bg-pink-500 dark:bg-pink-600' : 'bg-secondary/60 dark:bg-primary/60'}`}
+                                    ${isLiked ? 'bg-content' : 'bg-secondary/60 dark:bg-primary/60'}`}
                             >
                                 <FontAwesomeIcon
                                     icon={isLiked ? faHeart : faHeartRegular}
@@ -247,7 +252,7 @@ const OutfitDetailsModal = ({
                                     size={20}
                                 />
                                 <Text className="text-center text-primary dark:text-secondary font-bold text-lg uppercase">
-                                    {isLiked ? 'Liked' : 'Like Outfit'}
+                                    {isLiked ? 'Saved' : 'Save Outfit'}
                                 </Text>
                             </TouchableOpacity>
                         )}

@@ -1,13 +1,34 @@
 import { SafeAreaView, View, Text, TouchableOpacity, ImageBackground, Image, FlatList } from "react-native";
-import React from "react";
+import React, {useContext} from "react";
 import { router } from "expo-router";
 
 import { ViewMode } from "@/types/wardrobe.ts";
 import { useTrendingOutfits } from "@/hooks/useWardrobe.ts";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
+import { AuthContext } from "@/context/AuthContext.tsx";
+import { useModal } from "@/hooks/useModal.ts";
+import { useItemOptions } from "@/hooks/useItemOptions.ts";
+import OutfitDetailsModal from "@/components/OutfitDetailsModal.tsx";
 
 const Home = () => {
-    const { trendingOutfits, isLoading } = useTrendingOutfits(6); // Fetch first 6 returned outfits
+    const { user } = useContext(AuthContext);
+    const { trendingOutfits, isLoading, setTrendingOutfits } = useTrendingOutfits(6); // Fetch first 6 returned outfits
+
+    const {
+        selectedOutfitItem,
+        isOutfitModalVisible,
+        openOutfitModal,
+        closeModals
+    } = useModal();
+
+    const { confirmDelete } = useItemOptions({
+        setTrendingOutfits,
+        onClose: closeModals
+    });
+
+    const shouldShowModal = isOutfitModalVisible &&
+        selectedOutfitItem &&
+        user?.uid;
 
     const handleWardrobeNavigation = (viewMode: ViewMode) => {
         router.push(`/wardrobe?viewMode=${viewMode}`);
@@ -78,7 +99,7 @@ const Home = () => {
                         showsHorizontalScrollIndicator={false}
                         renderItem={({ item }) => (
                             <TouchableOpacity
-                                onPress={() => handleWardrobeNavigation('outfits')}
+                                onPress={() => openOutfitModal(item)}
                                 className="mr-4 flex-1 items-center justify-center bg-secondary/5 dark:bg-primary/5 w-44 h-44"
                             >
                                 <Image
@@ -101,6 +122,17 @@ const Home = () => {
                     />
                 )}
             </View>
+
+            {shouldShowModal && (
+                <OutfitDetailsModal
+                    item={selectedOutfitItem}
+                    isVisible={isOutfitModalVisible}
+                    onClose={closeModals}
+                    onDelete={(itemId) => confirmDelete(itemId, 'outfits')}
+                    currentUserId={user!.uid}
+                    isOwner={user.uid === selectedOutfitItem.userId}
+                />
+            )}
         </SafeAreaView>
     )
 }

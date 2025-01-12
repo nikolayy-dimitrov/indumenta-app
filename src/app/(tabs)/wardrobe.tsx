@@ -1,35 +1,48 @@
-import { Alert, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
-
-import { deleteDoc, doc } from "firebase/firestore";
-import { db } from "@/../firebaseConfig.ts";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
 import { SortOption, ViewMode } from "@/types/wardrobe.ts";
+import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { router, useLocalSearchParams } from 'expo-router';
 
 import ClothingDetailsModal from "@/components/ClothingDetailsModal.tsx";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
 import OutfitDetailsModal from "@/components/OutfitDetailsModal.tsx";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
-import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 import { useClothes, useOutfits } from "@/hooks/useWardrobe.ts";
+import { useModal } from '@/hooks/useModal.ts';
+import { useItemOptions } from '@/hooks/useItemOptions.ts';
 
 const Wardrobe = () => {
     const { user  } = useContext(AuthContext);
     const { viewMode: initialViewMode = 'clothes' } = useLocalSearchParams<{ viewMode: ViewMode }>();
 
     const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
-    const { outfits, isLoading: isOutfitsLoading } = useOutfits(user?.uid);
+    const { outfits, isLoading: isOutfitsLoading, setOutfits } = useOutfits(user?.uid);
     const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
-    const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectedOutfit, setSelectedOutfit] = useState<OutfitItem | null>(null);
-    const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
+
+    const {
+        selectedClothingItem,
+        selectedOutfitItem,
+        isClothingModalVisible,
+        isOutfitModalVisible,
+        openClothingModal,
+        openOutfitModal,
+        closeModals
+    } = useModal();
+
+    const {
+        confirmDelete
+    } = useItemOptions({
+        setClothes,
+        setOutfits,
+        onClose: closeModals
+    });
 
     const { showActionSheetWithOptions } = useActionSheet();
 
@@ -44,44 +57,10 @@ const Wardrobe = () => {
 
     const handleItemPress = (item: ClothingItem | OutfitItem, type: "clothes" | "outfits") => {
         if (type === "clothes") {
-            setSelectedItem(item as ClothingItem);
-            setIsModalVisible(true);
+            openClothingModal(item as ClothingItem);
         } else if (type === "outfits") {
-            setSelectedOutfit(item as OutfitItem);
-            setIsOutfitModalVisible(true);
+            openOutfitModal(item as OutfitItem);
         }
-    };
-
-    const handleCloseModal = () => {
-        setIsModalVisible(false);
-        setIsOutfitModalVisible(false);
-        setSelectedItem(null);
-        setSelectedOutfit(null);
-    };
-
-    const deleteItem = async (itemId: string) => {
-        try {
-            const itemDocRef = doc(db, "clothes", itemId);
-            await deleteDoc(itemDocRef);
-
-            setClothes(prevClothes => prevClothes.filter(item => item.id !== itemId));
-        } catch (error) {
-            console.error("Error deleting item:", error);
-        }
-    };
-
-    const confirmDelete = (itemId: string) => {
-        Alert.alert(
-            "Delete Item",
-            "Are you sure you want to remove this item?",
-            [
-                { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive", onPress: () => {
-                        deleteItem(itemId);
-                        handleCloseModal();
-                    }, }
-            ]
-        );
     };
 
     const sortClothes = (items: ClothingItem[]): ClothingItem[] => {
@@ -276,21 +255,21 @@ const Wardrobe = () => {
                     }
                 />
             )}
-            {isModalVisible && selectedItem && viewMode === "clothes" && (
+            {isClothingModalVisible && selectedClothingItem && viewMode === "clothes" && (
                 <ClothingDetailsModal
-                    item={selectedItem}
-                    isVisible={isModalVisible}
-                    onClose={handleCloseModal}
-                    onDelete={confirmDelete}
+                    item={selectedClothingItem}
+                    isVisible={isClothingModalVisible}
+                    onClose={closeModals}
+                    onDelete={(itemId) => confirmDelete(itemId, 'clothes')}
                 />
             )}
 
-            {isOutfitModalVisible && selectedOutfit && viewMode === "outfits" && (
+            {isOutfitModalVisible && selectedOutfitItem && viewMode === "outfits" && (
                 <OutfitDetailsModal
-                    item={selectedOutfit}
+                    item={selectedOutfitItem}
                     isVisible={isOutfitModalVisible}
-                    onClose={handleCloseModal}
-                    onDelete={confirmDelete}
+                    onClose={closeModals}
+                    onDelete={(itemId) => confirmDelete(itemId, 'outfits')}
                     currentUserId={user.uid}
                 />
             )}

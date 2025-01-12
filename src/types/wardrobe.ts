@@ -23,3 +23,25 @@ export interface OutfitItem {
     userId: string;
     likesCount?: number;
 }
+
+export interface UseModalReturn {
+    selectedClothingItem: ClothingItem | null;
+    selectedOutfitItem: OutfitItem | null;
+    isClothingModalVisible: boolean;
+    isOutfitModalVisible: boolean;
+    openClothingModal: (item: ClothingItem) => void;
+    openOutfitModal: (item: OutfitItem) => void;
+    closeModals: () => void;
+}
+
+export interface UseItemManagementProps {
+    setClothes?: React.Dispatch<React.SetStateAction<ClothingItem[]>>;
+    setOutfits?: React.Dispatch<React.SetStateAction<OutfitItem[]>>;
+    setTrendingOutfits?: React.Dispatch<React.SetStateAction<OutfitItem[]>>;
+    onClose: () => void;
+}
+
+export interface UseItemManagementReturn {
+    deleteItem: (itemId: string, itemType: 'clothes' | 'outfits') => Promise<void>;
+    confirmDelete: (itemId: string, itemType: 'clothes' | 'outfits') => void;
+}

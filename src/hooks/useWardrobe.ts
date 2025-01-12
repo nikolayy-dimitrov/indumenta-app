@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig";
+
 import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 
 export const useClothes = (userId: string | undefined) => {
@@ -75,7 +76,7 @@ export const useTrendingOutfits = (limitCount: number = 10) => {
 
     useEffect(() => {
         const outfitsRef = collection(db, "outfits");
-        
+
         const q = query(
             outfitsRef,
             orderBy("match", "desc"),
@@ -102,5 +103,5 @@ export const useTrendingOutfits = (limitCount: number = 10) => {
         return () => unsubscribe();
     }, [limitCount]);
 
-    return { trendingOutfits, isLoading };
+    return { trendingOutfits, isLoading, setTrendingOutfits };
 };

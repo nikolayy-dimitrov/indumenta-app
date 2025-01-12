@@ -20,4 +20,6 @@ export interface OutfitItem {
     createdAt: Timestamp;
     match: number;
     stylePreferences: { color: string; occasion: string };
+    userId: string;
+    likesCount?: number;
 }

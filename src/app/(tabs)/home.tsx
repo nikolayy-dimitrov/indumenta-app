@@ -74,43 +74,30 @@ const Home = () => {
                     <FlatList
                         data={trendingOutfits}
                         keyExtractor={(item) => item.id}
-                        numColumns={2}
-                        columnWrapperStyle={{ justifyContent: 'space-between' }}
-                        showsVerticalScrollIndicator={false}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 onPress={() => handleWardrobeNavigation('outfits')}
-                                className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 my-2"
+                                className="mr-4 flex-1 items-center justify-center bg-secondary/5 dark:bg-primary/5 w-44 h-44"
                             >
-                                <View className="w-44 h-52 flex-col items-center justify-center">
-                                    <Image
-                                        source={{ uri: item.outfitPieces.Top }}
-                                        className="w-full h-1/3 rounded-t-xl"
-                                        resizeMode="contain"
-                                    />
-                                    <Image
-                                        source={{ uri: item.outfitPieces.Bottom }}
-                                        className="w-full h-1/3"
-                                        resizeMode="contain"
-                                    />
-                                    <Image
-                                        source={{ uri: item.outfitPieces.Shoes }}
-                                        className="w-full h-1/3 rounded-b-xl"
-                                        resizeMode="contain"
-                                    />
-                                </View>
-                                <View className="px-3 gap-2 flex-row items-center">
-                                    <Text className="lowercase font-medium text-sm text-secondary/80 dark:text-primary/80">
-                                        {item.label || 'Trending outfit'}
-                                    </Text>
-                                </View>
+                                <Image
+                                    source={{ uri: item.outfitPieces.Top }}
+                                    className="w-full h-1/3 rounded-t-xl"
+                                    resizeMode="cover"
+                                />
+                                <Image
+                                    source={{ uri: item.outfitPieces.Bottom }}
+                                    className="w-full h-1/3"
+                                    resizeMode="cover"
+                                />
+                                <Image
+                                    source={{ uri: item.outfitPieces.Shoes }}
+                                    className="w-full h-1/3 rounded-b-xl"
+                                    resizeMode="cover"
+                                />
                             </TouchableOpacity>
                         )}
-                        ListEmptyComponent={
-                            <View className="flex-1 h-full items-center justify-center py-32">
-                                <Text className="text-gray-500">No trending outfits found.</Text>
-                            </View>
-                        }
                     />
                 )}
             </View>

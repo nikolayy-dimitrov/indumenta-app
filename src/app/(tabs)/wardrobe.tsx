@@ -46,7 +46,7 @@ const Wardrobe = () => {
         if (type === "clothes") {
             setSelectedItem(item as ClothingItem);
             setIsModalVisible(true);
-        } else {
+        } else if (type === "outfits") {
             setSelectedOutfit(item as OutfitItem);
             setIsOutfitModalVisible(true);
         }
@@ -291,6 +291,7 @@ const Wardrobe = () => {
                     isVisible={isOutfitModalVisible}
                     onClose={handleCloseModal}
                     onDelete={confirmDelete}
+                    currentUserId={user.uid}
                 />
             )}
         </SafeAreaView>

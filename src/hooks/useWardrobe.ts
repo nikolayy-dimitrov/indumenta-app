@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig";
 import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 
@@ -55,6 +55,7 @@ export const useOutfits = (userId: string | undefined) => {
                     match: data.match,
                     label: data.label,
                     stylePreferences: data.stylePreferences,
+                    userId: data.userId,
                 } as OutfitItem;
             });
 
@@ -66,4 +67,40 @@ export const useOutfits = (userId: string | undefined) => {
     }, [userId]);
 
     return { outfits, isLoading, setOutfits };
+};
+
+export const useTrendingOutfits = (limitCount: number = 10) => {
+    const [trendingOutfits, setTrendingOutfits] = useState<OutfitItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const outfitsRef = collection(db, "outfits");
+        
+        const q = query(
+            outfitsRef,
+            orderBy("match", "desc"),
+            limit(limitCount)
+        );
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const outfitsData = querySnapshot.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    outfitPieces: data.outfit_pieces,
+                    createdAt: data.createdAt,
+                    match: data.match,
+                    label: data.label,
+                    stylePreferences: data.stylePreferences,
+                } as OutfitItem;
+            });
+
+            setTrendingOutfits(outfitsData);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [limitCount]);
+
+    return { trendingOutfits, isLoading };
 };

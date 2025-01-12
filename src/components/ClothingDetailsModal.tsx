@@ -1,9 +1,9 @@
 import { View, Text, Modal, Image, TouchableOpacity, useColorScheme, Animated } from "react-native";
-import { ClothingItem } from "@/app/(tabs)/wardrobe";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import usePanDraggable from "@/hooks/usePanDraggable.ts";
 import React from "react";
+import { ClothingItem } from "@/types/wardrobe.ts";
 
 interface ClothingDetailsModalProps {
     item: ClothingItem | null;

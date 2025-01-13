@@ -2,6 +2,7 @@ import { Timestamp } from "firebase/firestore";
 
 export type ViewMode = 'clothes' | 'outfits';
 export type SortOption = 'newest' | 'oldest' | 'color';
+export type OutfitFilter = 'owned' | 'saved';
 
 export interface ClothingItem {
     id: string;

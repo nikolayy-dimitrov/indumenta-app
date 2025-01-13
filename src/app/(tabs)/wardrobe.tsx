@@ -2,7 +2,7 @@ import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 
 import { AuthContext } from "@/context/AuthContext.tsx";
-import { SortOption, ViewMode } from "@/types/wardrobe.ts";
+import { OutfitFilter, SortOption, ViewMode } from "@/types/wardrobe.ts";
 import { ClothingItem, OutfitItem } from "@/types/wardrobe";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,10 +21,12 @@ const Wardrobe = () => {
     const { user  } = useContext(AuthContext);
     const { viewMode: initialViewMode = 'clothes' } = useLocalSearchParams<{ viewMode: ViewMode }>();
 
-    const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
-    const { outfits, isLoading: isOutfitsLoading, setOutfits } = useOutfits(user?.uid);
     const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
+    const [outfitFilter, setOutfitFilter] = useState<OutfitFilter>("owned");
+    
+    const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
+    const { outfits, isLoading: isOutfitsLoading, setOutfits } = useOutfits(user?.uid, outfitFilter);
 
     const {
         selectedClothingItem,
@@ -128,6 +130,49 @@ const Wardrobe = () => {
 
     const sortedClothes = sortClothes(clothes);
 
+    // Filter outfits
+    const handleOutfitFilterOptions = () => {
+        const options = ["Owned", "Saved", "Cancel"];
+        const cancelButtonIndex = options.length - 1;
+
+        showActionSheetWithOptions(
+            {
+                options,
+                cancelButtonIndex,
+                cancelButtonTintColor: '#d32f2f',
+                destructiveButtonIndex: cancelButtonIndex,
+                showSeparators: true,
+                separatorStyle: {
+                    width: '100%',
+                    backgroundColor: 'rgba(24,24,25,0.2)',
+                    height: 1,
+                    marginLeft: 0,
+                    marginRight: 0,
+                },
+                containerStyle: {
+                    alignItems: "center", justifyContent: "center",
+                    borderRadius: 10,
+                    margin: 10,
+                    backgroundColor: '#F8E9D5',
+                    opacity: 0.96,
+                },
+                textStyle: {
+                    textAlign: "center",
+                    color: "rgba(24,24,25,0.81)",
+                    width: '100%',
+                    alignSelf: 'center',
+                },
+            },
+            (buttonIndex) => {
+                if (buttonIndex === 0) {
+                    setOutfitFilter("owned");
+                } else if (buttonIndex === 1) {
+                    setOutfitFilter("saved");
+                }
+            }
+        );
+    }
+
     if (!user) {
         return (
             <View className="flex-1 justify-center items-center h-full font-Josefin bg-primary dark:bg-secondary">
@@ -187,23 +232,13 @@ const Wardrobe = () => {
                         showsVerticalScrollIndicator={false}
                         data={sortedClothes}
                         keyExtractor={(item) => item.id}
-                        numColumns={2}
-                        columnWrapperStyle={{ justifyContent: 'space-between' }}
+                        numColumns={3}
                         renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleItemPress(item, 'clothes')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 my-2">
+                            <TouchableOpacity onPress={() => handleItemPress(item, 'clothes')} className="my-1 mx-1">
                                 <Image
                                     source={{ uri: item.imageUrl }}
-                                    className="w-44 h-44 rounded-t-xl"
+                                    className="w-32 h-32"
                                 />
-                                <View className="px-3 gap-2 flex-row items-center">
-                                    <Text className="lowercase font-medium text-base text-secondary/90 dark:text-primary/90">
-                                        {item.category}
-                                    </Text>
-                                    <View
-                                        style={{ backgroundColor: item.dominantColor }}
-                                        className="w-4 h-4 rounded"
-                                    ></View>
-                                </View>
                             </TouchableOpacity>
                         )}
                         ListEmptyComponent={
@@ -215,45 +250,51 @@ const Wardrobe = () => {
                 </View>
             ) : (
                 // Display outfits
-                <FlatList
-                    className="w-full"
-                    showsVerticalScrollIndicator={false}
-                    data={outfits}
-                    keyExtractor={(item) => item.id}
-                    numColumns={2}
-                    columnWrapperStyle={{ justifyContent: 'space-between' }}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleItemPress(item, 'outfits')} className="bg-secondary/5 dark:bg-primary/5 pb-4 rounded-xl gap-4 my-2">
-                            <View className="w-44 h-52 flex-col items-center justify-center">
-                                <Image
-                                    source={{ uri: item.outfitPieces.Top }}
-                                    className="w-full h-1/3 rounded-t-xl"
-                                    resizeMode="contain"
-                                />
-                                <Image
-                                    source={{ uri: item.outfitPieces.Bottom }}
-                                    className="w-full h-1/3"
-                                    resizeMode="contain"
-                                />
-                                <Image
-                                    source={{ uri: item.outfitPieces.Shoes }}
-                                    className="w-full h-1/3 rounded-b-xl"
-                                    resizeMode="contain"
-                                />
-                            </View>
-                            <TouchableOpacity className="px-3 gap-2 flex-row items-center">
-                                <Text className="lowercase font-medium text-sm text-secondary/80 dark:text-primary/80">
-                                    {item.label ? item.label : 'Label outfit'}
-                                </Text>
+                <View className="flex-1 pb-8 items-center overflow-hidden">
+                    <TouchableOpacity onPress={handleOutfitFilterOptions} className="absolute bottom-8 z-10 w-1/2 bg-secondary/80 dark:bg-primary/80 rounded-md p-2 mb-2">
+                        <Text className="uppercase w-full text-center font-medium text-lg text-primary/80 dark:text-secondary/80">
+                            {outfitFilter}
+                        </Text>
+                    </TouchableOpacity>
+                    <FlatList
+                        className="w-full"
+                        showsVerticalScrollIndicator={false}
+                        data={outfits}
+                        keyExtractor={(item) => item.id}
+                        numColumns={3}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleItemPress(item, 'outfits')} className="bg-secondary/5 dark:bg-primary/5 pb-2 rounded-sm gap-2 my-1 mx-1">
+                                <View className="w-32 h-32 flex-col items-center justify-center">
+                                    <Image
+                                        source={{ uri: item.outfitPieces.Top }}
+                                        className="w-full h-1/3 rounded-t-lg"
+                                        resizeMode="cover"
+                                    />
+                                    <Image
+                                        source={{ uri: item.outfitPieces.Bottom }}
+                                        className="w-full h-1/3"
+                                        resizeMode="cover"
+                                    />
+                                    <Image
+                                        source={{ uri: item.outfitPieces.Shoes }}
+                                        className="w-full h-1/3"
+                                        resizeMode="cover"
+                                    />
+                                </View>
+                                <TouchableOpacity className="px-3 gap-2 flex-row items-center">
+                                    <Text className="lowercase font-medium text-sm text-secondary/80 dark:text-primary/80">
+                                        {item.label ? item.label : 'Label outfit'}
+                                    </Text>
+                                </TouchableOpacity>
                             </TouchableOpacity>
-                        </TouchableOpacity>
-                    )}
-                    ListEmptyComponent={
-                        <View className="flex-1 h-full items-center justify-center py-32">
-                            <Text className="text-gray-500">No outfits found in your wardrobe.</Text>
-                        </View>
-                    }
-                />
+                        )}
+                        ListEmptyComponent={
+                            <View className="flex-1 h-full items-center justify-center py-32">
+                                <Text className="text-gray-500">No outfits found in your wardrobe.</Text>
+                            </View>
+                        }
+                    />
+                </View>
             )}
             {isClothingModalVisible && selectedClothingItem && viewMode === "clothes" && (
                 <ClothingDetailsModal

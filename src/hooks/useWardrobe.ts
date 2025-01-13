@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { collection, getDoc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { doc as firestoreDoc } from "firebase/firestore";
 import { db } from "@/../firebaseConfig";
 
-import { ClothingItem, OutfitItem } from "@/types/wardrobe";
+import { ClothingItem, OutfitFilter, OutfitItem } from "@/types/wardrobe";
 
 export const useClothes = (userId: string | undefined) => {
     const [clothes, setClothes] = useState<ClothingItem[]>([]);
@@ -33,9 +34,10 @@ export const useClothes = (userId: string | undefined) => {
     return { clothes, isLoading, setClothes };
 };
 
-export const useOutfits = (userId: string | undefined) => {
+export const useOutfits = (userId: string | undefined, filter: OutfitFilter = 'owned') => {
     const [outfits, setOutfits] = useState<OutfitItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const { savedOutfits, isLoading: isSavedLoading } = useSavedOutfits(userId);
 
     useEffect(() => {
         if (!userId) {
@@ -44,7 +46,9 @@ export const useOutfits = (userId: string | undefined) => {
         }
 
         const outfitsRef = collection(db, "outfits");
-        const q = query(outfitsRef, where("userId", "==", userId));
+        const q = filter === 'owned'
+            ? query(outfitsRef, where("userId", "==", userId))
+            : query(outfitsRef);
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const outfitsData = querySnapshot.docs.map((doc) => {
@@ -57,17 +61,76 @@ export const useOutfits = (userId: string | undefined) => {
                     label: data.label,
                     stylePreferences: data.stylePreferences,
                     userId: data.userId,
+                    likesCount: data.likesCount
                 } as OutfitItem;
             });
 
-            setOutfits(outfitsData);
+            if (filter === 'saved') {
+                setOutfits(savedOutfits);
+            } else {
+                setOutfits(outfitsData);
+            }
             setIsLoading(false);
         });
 
         return () => unsubscribe();
+    }, [userId, filter, savedOutfits]);
+
+    return { outfits, isLoading: isLoading || isSavedLoading, setOutfits };
+};
+
+export const useSavedOutfits = (userId: string | undefined) => {
+    const [savedOutfits, setSavedOutfits] = useState<OutfitItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!userId) {
+            setIsLoading(false);
+            return;
+        }
+
+        const fetchSavedOutfits = async () => {
+            try {
+                const outfitsRef = collection(db, "outfits");
+                const outfitsQuery = query(outfitsRef);
+
+                const unsubscribe = onSnapshot(outfitsQuery, async (querySnapshot) => {
+                    const outfitPromises = querySnapshot.docs.map(async (doc) => {
+                        const outfitData = doc.data();
+                        const likeRef = firestoreDoc(db, "outfits", doc.id, "likes", userId);
+                        const likeDoc = await getDoc(likeRef);
+
+                        if (likeDoc.exists()) {
+                            return {
+                                id: doc.id,
+                                outfitPieces: outfitData.outfit_pieces,
+                                createdAt: outfitData.createdAt,
+                                match: outfitData.match,
+                                label: outfitData.label,
+                                stylePreferences: outfitData.stylePreferences,
+                                userId: outfitData.userId,
+                                likesCount: outfitData.likesCount
+                            } as OutfitItem;
+                        }
+                        return null;
+                    });
+
+                    const resolvedOutfits = (await Promise.all(outfitPromises)).filter((outfit): outfit is OutfitItem => outfit !== null);
+                    setSavedOutfits(resolvedOutfits);
+                    setIsLoading(false);
+                });
+
+                return () => unsubscribe();
+            } catch (error) {
+                console.error("Error fetching saved outfits:", error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchSavedOutfits();
     }, [userId]);
 
-    return { outfits, isLoading, setOutfits };
+    return { savedOutfits, isLoading, setSavedOutfits };
 };
 
 export const useTrendingOutfits = (limitCount: number = 10) => {

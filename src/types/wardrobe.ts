@@ -23,6 +23,7 @@ export interface OutfitItem {
     stylePreferences: { color: string; occasion: string };
     userId: string;
     likesCount?: number;
+    scheduledDate?: Timestamp;
 }
 
 export interface UseModalReturn {

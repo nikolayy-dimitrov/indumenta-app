@@ -24,7 +24,7 @@ const Wardrobe = () => {
     const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
     const [sortBy, setSortBy] = useState<SortOption>("newest");
     const [outfitFilter, setOutfitFilter] = useState<OutfitFilter>("owned");
-    
+
     const { clothes, isLoading: isClothesLoading, setClothes } = useClothes(user?.uid);
     const { outfits, isLoading: isOutfitsLoading, setOutfits } = useOutfits(user?.uid, outfitFilter);
 
@@ -289,7 +289,7 @@ const Wardrobe = () => {
                             </TouchableOpacity>
                         )}
                         ListEmptyComponent={
-                            <View className="flex-1 h-full items-center justify-center py-32">
+                            <View className="flex-1 items-center justify-center h-full my-[50%]">
                                 <Text className="text-gray-500">No outfits found in your wardrobe.</Text>
                             </View>
                         }

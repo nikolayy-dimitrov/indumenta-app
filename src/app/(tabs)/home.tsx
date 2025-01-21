@@ -3,7 +3,7 @@ import React, {useContext} from "react";
 import { router } from "expo-router";
 
 import { ViewMode } from "@/types/wardrobe.ts";
-import { useTrendingOutfits } from "@/hooks/useWardrobe.ts";
+import { useScheduledOutfits, useTrendingOutfits } from "@/hooks/useWardrobe.ts";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import { AuthContext } from "@/context/AuthContext.tsx";
 import { useModal } from "@/hooks/useModal.ts";
@@ -12,7 +12,9 @@ import OutfitDetailsModal from "@/components/OutfitDetailsModal.tsx";
 
 const Home = () => {
     const { user } = useContext(AuthContext);
-    const { trendingOutfits, isLoading, setTrendingOutfits } = useTrendingOutfits(6); // Fetch first 6 returned outfits
+    const { trendingOutfits, isLoading: trendingLoading, setTrendingOutfits } = useTrendingOutfits(6); // Fetch first 6 returned outfits
+    const { scheduledOutfits, isLoading: scheduleLoading, setScheduledOutfits } =
+        useScheduledOutfits(user?.uid || '');
 
     const {
         selectedOutfitItem,
@@ -84,12 +86,13 @@ const Home = () => {
                     </Text>
                 </TouchableOpacity>
             </View>
+
             {/* Community outfits display */}
             <View className="flex-1 p-4 gap-4 mt-2">
                 <Text className="uppercase tracking-wider text-secondary dark:text-primary text-lg font-medium">
                     Trending Outfits
                 </Text>
-                {isLoading ? (
+                {trendingLoading ? (
                     <LoadingScreen />
                 ) : (
                     <FlatList
@@ -100,7 +103,7 @@ const Home = () => {
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 onPress={() => openOutfitModal(item)}
-                                className="mr-4 flex-1 items-center justify-center bg-secondary/5 dark:bg-primary/5 w-44 h-44"
+                                className="mr-4 flex-1 items-center justify-center w-44 h-44"
                             >
                                 <Image
                                     source={{ uri: item.outfitPieces.Top }}
@@ -122,6 +125,39 @@ const Home = () => {
                     />
                 )}
             </View>
+            {scheduledOutfits.length > 0 ? (
+                <View className="flex-1 p-4 gap-4">
+                    <Text className="uppercase tracking-wider text-secondary dark:text-primary text-lg font-medium">
+                        Scheduled Outfits
+                    </Text>
+                    {scheduleLoading ? (
+                        <LoadingScreen />
+                    ) : (
+                        <FlatList
+                            data={scheduledOutfits}
+                            keyExtractor={(item) => item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={({ item }) => {
+                                const date = item.scheduledDate?.toDate(); // Convert Timestamp to Date
+                                const day = date!.getDate(); // Get the day
+                                const month = date!.toLocaleString("en-US", { month: "short" }) // Format as a short month
+
+                                return (
+                                <TouchableOpacity
+                                    onPress={() => openOutfitModal(item)}
+                                    className="mr-2 flex-1 w-28 h-28 items-center justify-center border border-secondary dark:border-primary rounded-xl"
+                                >
+                                    <Text className="text-secondary dark:text-primary font-semibold text-4xl">{day}</Text>
+                                    <Text className="text-secondary dark:text-primary font-medium text-lg">{month}</Text>
+                                </TouchableOpacity>
+
+                            )}}
+                        />
+                        )}
+                </View>
+                ) : null
+            }
 
             {shouldShowModal && (
                 <OutfitDetailsModal

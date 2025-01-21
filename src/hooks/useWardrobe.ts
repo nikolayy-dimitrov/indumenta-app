@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDoc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import {collection, getDoc, limit, onSnapshot, orderBy, query, Timestamp, where} from "firebase/firestore";
 import { doc as firestoreDoc } from "firebase/firestore";
 import { db } from "@/../firebaseConfig";
 
@@ -167,4 +167,47 @@ export const useTrendingOutfits = (limitCount: number = 10) => {
     }, [limitCount]);
 
     return { trendingOutfits, isLoading, setTrendingOutfits };
+};
+
+export const useScheduledOutfits = (userId: string) => {
+    const [scheduledOutfits, setScheduledOutfits] = useState<OutfitItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const outfitsRef = collection(db, "outfits");
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const q = query(
+            outfitsRef,
+            where('userId', '==', userId),
+            where('scheduledDate', '>=', today)
+        );
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const outfitsData = querySnapshot.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    outfitPieces: data.outfit_pieces,
+                    createdAt: data.createdAt,
+                    match: data.match,
+                    label: data.label,
+                    stylePreferences: data.stylePreferences,
+                    ...doc.data()
+                } as OutfitItem;
+            })
+                .sort((a, b) => {
+                const dateA = (a.scheduledDate as Timestamp).toDate();
+                const dateB = (b.scheduledDate as Timestamp).toDate();
+                return dateA.getTime() - dateB.getTime();
+            });
+            setScheduledOutfits(outfitsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    })
+
+    return { scheduledOutfits, isLoading, setScheduledOutfits };
 };

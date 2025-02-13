@@ -27,6 +27,14 @@
     },
     "android": {
       "package": "com.anonymous.indumentaapp"
+    },
+    "extra": {
+      "router": {
+        "origin": "https://n"
+      },
+      "eas": {
+        "projectId": "fb2f2186-51ac-432d-a1b1-842302db5242"
+      }
     }
   }
 }

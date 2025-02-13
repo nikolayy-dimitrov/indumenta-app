@@ -3,17 +3,16 @@ import { Alert, Image, View, Text, TouchableOpacity, useColorScheme } from 'reac
 import { AuthContext } from "@/context/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import CustomButton from "@/components/CustomButton";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 import { handleUpload } from "@/utils/imageUploadUtils.ts";
-import { extractDominantColor } from "@/utils/colorUtils.ts";
+import { getDominantColors } from "@/utils/colorUtils.ts";
 import { pickImage, requestCameraPermission, requestGalleryPermission, takePhoto } from "@/utils/imagePickerUtils.ts";
 
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
-import {faArrowRight, faImage, faUpload, faXmark} from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faImage, faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
@@ -37,9 +36,9 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
         const fetchDominantColor = async () => {
             if (imageUri) {
                 try {
-                    const color = await extractDominantColor(imageUri);
-                    setDominantColor(color);
-                    console.log(color);
+                    const color = await getDominantColors(imageUri);
+                    setDominantColor(color[0]);
+                    console.log('Dominant color:', color[0]);
                 } catch (error) {
                     console.error('Failed to extract dominant color:', error);
                     setDominantColor('#FFFFFF');

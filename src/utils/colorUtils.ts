@@ -1,32 +1,13 @@
-import RNColorThief from 'react-native-color-thief';
+import { KMeans } from './kmeans';
+import { getImagePixels } from './imageManipulationUtils';
 
-export const extractDominantColor = async (imageUri: string): Promise<string> => {
-    const quality = 12;
-    const includeWhite = false;
+export async function getDominantColors(uri: string, k: number = 3): Promise<string[]> {
+    const pixels = await getImagePixels(uri);
+    const kmeans = new KMeans(k);
+    const centroids = kmeans.fit(pixels);
 
-    function rgbToHex(r: number, g: number, b: number): string {
-        return (
-            '#' +
-            [r, g, b]
-                .map((component) => {
-                    const hex = component.toString(16);
-                    return hex.length === 1 ? '0' + hex : hex;
-                })
-                .join('')
-        );
-    }
-
-    if (!imageUri) {
-        return '#FFFFFF';
-    }
-
-    try {
-        const color = await RNColorThief.getColor(imageUri, quality, includeWhite);
-        const hexColor = rgbToHex(color.r, color.g, color.b);
-        console.log('Extracted Hex Color:', hexColor);
-        return hexColor;
-    } catch (error) {
-        console.error('Error extracting color:', error);
-        return '#FFFFFF';
-    }
-};
+    return centroids.map(c => {
+        const [r, g, b] = c.map(v => Math.round(v));
+        return `#${[r, g, b].map(n => n.toString(16).padStart(2, '0')).join('')}`;
+    });
+}

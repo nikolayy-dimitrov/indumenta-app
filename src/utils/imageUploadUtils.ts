@@ -16,7 +16,7 @@ export const handleUpload = async (
         return;
     }
 
-    const apiUrl = BACKEND_URL + "/api/predict";
+    const apiUrl =`${BACKEND_URL}/api/predict`;
 
     try {
         for (let i = 0; i < images.length; i++) {

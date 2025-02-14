@@ -12,11 +12,11 @@ import {
     faRightFromBracket,
     faSwatchbook
 } from "@fortawesome/free-solid-svg-icons";
-import {faBell, faStar} from "@fortawesome/free-regular-svg-icons"
+import { faBell, faStar } from "@fortawesome/free-regular-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { pickImage, requestGalleryPermission} from "@/utils/imagePickerUtils.ts";
-import {faXTwitter} from "@fortawesome/free-brands-svg-icons";
+import { faXTwitter } from "@fortawesome/free-brands-svg-icons";
 
 const Profile = () => {
     const { user } = useContext(AuthContext);
@@ -45,49 +45,54 @@ const Profile = () => {
         })
         : "Unknown";
 
-    const handleUserPhoto = async () => {
-        if (!user || !userPhoto) return;
+    const uriToBlob = async (uri: string): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = () => resolve(xhr.response);
+            xhr.onerror = () => reject(new Error('Failed to convert URI to blob'));
+            xhr.responseType = 'blob';
+            xhr.open('GET', uri, true);
+            xhr.send(null);
+        });
+    };
+
+    const handleUserPhoto = async (uri: string, mimeType: string) => {
+        if (!user) return;
 
         try {
             const storage = getStorage();
-            const fileName = `profilePhotos/${user.uid}.jpg`;
+            const fileName = `profilePhotos/${user.uid}`;
             const storageRef = ref(storage, fileName);
 
-            // Check if the current photo URL exists and matches the file in storage
-            if (user.photoURL) {
-                const currentPhotoRef = ref(storage, user.photoURL);
-
-                try {
-                    await deleteObject(currentPhotoRef);
-                } catch (deleteError) {
-                    console.error("No existing photo to delete or failed to delete", deleteError);
-                }
+            // Delete existing photo if needed
+            try {
+                await deleteObject(storageRef);
+            } catch (deleteError) {
+                console.log("No existing photo to delete", deleteError);
             }
 
-            const response = await fetch(userPhoto);
-            const blob = await response.blob();
+            // Convert URI to Blob
+            const blob = await uriToBlob(uri);
 
-            // const mimeType = blob.type || "image/jpeg";
+            // Upload with correct MIME type
+            await uploadBytes(storageRef, blob, { contentType: mimeType });
 
-            // Upload the image with the correct MIME type
-            await uploadBytes(storageRef, blob, {
-                contentType: "image/jpeg",
-            });
-
+            // Get download URL and update profile
             const photoURL = await getDownloadURL(storageRef);
-
             await updateProfile(user, { photoURL });
-
             setUserPhoto(photoURL);
         } catch (error) {
             console.error("Error updating photo:", error);
-            Alert.alert("Error", "Failed to update the photo. Please try again.", [{ text: "OK" }]);
+            Alert.alert("Error", "Failed to update the photo. Please try again.");
         }
     };
 
     const handlePickImage = async () => {
-        await pickImage(setUserPhoto, requestGalleryPermission);
-        await handleUserPhoto();
+        const imageInfo = await pickImage(requestGalleryPermission);
+        if (imageInfo) {
+            setUserPhoto(imageInfo.uri);
+            await handleUserPhoto(imageInfo.uri, imageInfo.mimeType);
+        }
     };
 
     const toggleEditUsername = (username: boolean) => {

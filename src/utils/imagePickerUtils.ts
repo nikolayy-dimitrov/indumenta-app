@@ -34,26 +34,30 @@ export const requestCameraPermission = async (): Promise<boolean> => {
 };
 
 export const pickImage = async (
-    setImageUri: (uri: string) => void,
-    requestGalleryPermission: () => Promise<boolean>
-) => {
-    const hasGalleryPermission = await requestGalleryPermission();
-    if (!hasGalleryPermission) return;
+    requestPermission: () => Promise<boolean>
+): Promise<{ uri: string; mimeType: string } | null> => {
+    const hasPermission = await requestPermission();
+    if (!hasPermission) return null;
 
     try {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
             quality: 1,
-            base64: false,
         });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const selectedImage = result.assets[0].uri;
-            setImageUri(selectedImage);
+        if (!result.canceled && result.assets?.[0]) {
+            return {
+                uri: result.assets[0].uri,
+                mimeType: result.assets[0].mimeType || 'image/jpeg'
+            };
         }
+        return null;
     } catch (error) {
         console.error("Error picking image:", error);
-        Alert.alert("Error", "Failed to pick an image. Please try again.", [{ text: "OK" }]);
+        Alert.alert("Error", "Failed to pick an image. Please try again.");
+        return null;
     }
 };
 

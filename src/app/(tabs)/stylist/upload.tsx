@@ -12,7 +12,9 @@ import { pickImage, requestCameraPermission, requestGalleryPermission, takePhoto
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/../firebaseConfig.ts";
 
-import { faArrowRight, faImage, faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { removeBackground } from 'react-native-background-remover';
+
+import {faAngleRight, faArrowRight, faImage, faUpload, faXmark} from "@fortawesome/free-solid-svg-icons";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
@@ -60,6 +62,18 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
         setIsLoading(false);
     };
 
+    // uri to blob method for background removal
+    // const uriToBlob = (uri: string) => {
+    //     return new Promise((resolve, reject) => {
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.onload = () => resolve(xhr.response);
+    //         xhr.onerror = () => reject(new Error('uriToBlob failed'));
+    //         xhr.responseType = 'blob';
+    //         xhr.open('GET', uri, true);
+    //         xhr.send(null);
+    //     });
+    // };
+
     const handleUploadImage = async () => {
         if (!imageUri) {
             Alert.alert("Error", "Please select an image to upload.");
@@ -74,20 +88,26 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
         setIsLoading(true);
 
         try {
+            // TODO: Re-add better background removal
+            // Process image with background removal
+            const processedUri = await removeBackground(imageUri);
+
             // Fetch the file from the URI and create a Blob
             const response = await fetch(imageUri);
             const blob = await response.blob();
 
+            // const blob = (await uriToBlob(processedUri)) as Blob;
+
             // Extract the file name from the URI or use a timestamp
-            const fileName = imageUri.split('/').pop() || `image_${Date.now()}.jpg`;
+            const fileName = imageUri.split('/').pop() || `image_${Date.now()}`;
 
             // Convert Blob to File
             const file = new File([blob], fileName, { type: blob.type });
 
-             // Replace with ColorThief logic if necessary
             await handleUpload([file], user, [dominantColor!], handleUploadSuccess, handleUploadError);
 
             Alert.alert("Success", "Image uploaded successfully!");
+
             setImageUri(null); // Reset image after successful upload
             await handleNext();
         } catch (error) {
@@ -144,12 +164,18 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
             ) : (
                 <View className='flex-1 items-center justify-center w-11/12 gap-0.5'>
                     <TouchableOpacity
-                        onPress={() => pickImage(setImageUri, requestGalleryPermission)}
+                        onPress={async () => {
+                            const imageInfo = await pickImage(requestGalleryPermission);
+                            if (imageInfo) setImageUri(imageInfo.uri);
+                        }}
                         className="overflow-hidden border border-secondary dark:border-primary rounded-t-lg h-1/3 w-full items-center justify-center flex">
                         <FontAwesomeIcon icon={faImage} style={dynamicIconStyle} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => takePhoto(setImageUri, requestCameraPermission)}
+                        onPress={async () => {
+                            const photoInfo = await takePhoto(requestCameraPermission);
+                            if (photoInfo) setImageUri(photoInfo.uri);
+                        }}
                         className="overflow-hidden border border-secondary dark:border-primary rounded-b-lg h-1/3 w-full items-center justify-center flex">
                         <FontAwesomeIcon icon={faCamera} style={dynamicIconStyle} size={20} />
                     </TouchableOpacity>
@@ -157,7 +183,7 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
             )}
 
             <TouchableOpacity
-                onPress={() => handleUploadImage}
+                onPress={handleUploadImage}
                 className="flex-row items-center justify-center gap-2 bg-primary dark:bg-secondary w-full py-4 my-8
                  border border-secondary/60 dark:border-primary/50 rounded-lg disabled:hidden"
                 disabled={!imageUri || isLoading}
@@ -174,11 +200,11 @@ const Upload: React.FC<UploadProps> = ({ onNext }) => {
             {clothesCount >= 3 ? (
                 <TouchableOpacity
                     onPress={() => handleNext()}
-                    className="flex-row items-center justify-center gap-2 bg-secondary/95 w-full py-4 border border-secondary/40 dark:border-primary/40 rounded-lg absolute bottom-4">
-                    <Text className="font-medium text-primary">
+                    className="flex-row items-center justify-end gap-2 w-full py-4 rounded-lg absolute top-4 right-4">
+                    <Text className="font-medium text-primary text-xl tracking-wide">
                         Select Style
                     </Text>
-                    <FontAwesomeIcon icon={faArrowRight} style={{ color: "#F8E9D5" }} />
+                    <FontAwesomeIcon icon={faAngleRight} style={{ color: "#F8E9D5" }} size={24} />
                 </TouchableOpacity>
                 ) : (
                     <View className="py-8 top-8 absolute">

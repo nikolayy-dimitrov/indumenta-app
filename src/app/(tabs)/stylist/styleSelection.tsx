@@ -157,7 +157,7 @@ const StyleSelection: React.FC<StyleSelectionProps> = ({
     <SafeAreaView className="flex-1 justify-center items-center font-Josefin w-11/12 mx-auto">
       <View className="absolute top-4 left-0 w-full flex-row items-center gap-12">
         <TouchableOpacity onPress={onBack} className="p-4">
-          <FontAwesomeIcon icon={faAngleLeft} size={20} style={dynamicIconStyle} />
+          <FontAwesomeIcon icon={faAngleLeft} size={24} style={dynamicIconStyle} />
         </TouchableOpacity>
         <Text className="text-2xl font-semibold text-secondary dark:text-primary">
             Style Preferences

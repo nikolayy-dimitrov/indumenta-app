@@ -34,10 +34,10 @@ export const requestCameraPermission = async (): Promise<boolean> => {
 };
 
 export const pickImage = async (
-    requestPermission: () => Promise<boolean>
+    requestGalleryPermission: () => Promise<boolean>
 ): Promise<{ uri: string; mimeType: string } | null> => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return null;
+    const hasGalleryPermission = await requestGalleryPermission();
+    if (!hasGalleryPermission) return null;
 
     try {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -62,25 +62,28 @@ export const pickImage = async (
 };
 
 export const takePhoto = async (
-    setImageUri: (uri: string) => void,
-    requestCameraPermission: () => Promise<boolean>
-) => {
-    const hasCameraPermission = await requestCameraPermission();
-    if (!hasCameraPermission) return;
+    requestPermission: () => Promise<boolean>
+): Promise<{ uri: string; mimeType: string } | null> => {
+    const hasPermission = await requestPermission();
+    if (!hasPermission) return null;
 
     try {
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
-            aspect: [4, 3],
+            aspect: [1, 1],
             quality: 1,
         });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const capturedImage = result.assets[0].uri;
-            setImageUri(capturedImage);
+        if (!result.canceled && result.assets?.[0]) {
+            return {
+                uri: result.assets[0].uri,
+                mimeType: result.assets[0].mimeType || 'image/jpeg'
+            };
         }
+        return null;
     } catch (error) {
         console.error("Error taking photo:", error);
-        Alert.alert("Error", "Failed to take a photo. Please try again.", [{ text: "OK" }]);
+        Alert.alert("Error", "Failed to take a photo. Please try again.");
+        return null;
     }
 };

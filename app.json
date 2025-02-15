@@ -4,6 +4,7 @@
       "image": "./assets/logo-grayscale.png",
       "resizeMode": "contain"
     },
+    "icon": "./assets/INDUMENTA_icon.png",
     "newArchEnabled": true,
     "scheme": "acme",
     "userInterfaceStyle": "automatic",
@@ -23,10 +24,14 @@
     "name": "INDUMENTA",
     "slug": "indumenta-app",
     "ios": {
-      "bundleIdentifier": "com.anonymous.indumenta-app"
+      "bundleIdentifier": "com.anonymous.indumenta-app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "For uploading clothing items"
+      }
     },
     "android": {
-      "package": "com.anonymous.indumentaapp"
+      "package": "com.anonymous.indumentaapp",
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "extra": {
       "router": {
